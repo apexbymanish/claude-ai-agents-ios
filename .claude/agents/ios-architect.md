@@ -37,6 +37,17 @@ Controller.
   see `ios-evidence-reporting`'s tool-tier rule: `STATIC_ANALYSIS`,
   same as a manual read, never higher.
 
+## Related Skills
+
+Load only what the specific question needs — don't load all three for
+a simple structural question:
+
+| If the question involves | Load |
+|---|---|
+| async/await, actors, `Sendable`, `Task`, data races | `swift-concurrency` |
+| SwiftUI state ownership, view identity, `@StateObject`/`@ObservedObject` | `swiftui-engineering` |
+| minimum deployment target, a specific API's availability, deprecated APIs | `ios-api-availability` |
+
 ## Procedure
 
 1. Read the existing project structure first — never propose a pattern

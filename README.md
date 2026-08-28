@@ -46,6 +46,10 @@ seven-tier taxonomy under [Evidence over assertion](#evidence-over-assertion).
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
 | `ios-performance-measurement` | `ios-memory-performance-engineer` | Reproduce → choose what to measure → measure before changing anything → change → re-measure with the same conditions → verify instrumentation removed |
 | `ios-evidence-reporting` | All 9 agents — fires whenever any of them concludes a task | Seven-tier evidence taxonomy (`ASSUMPTION` → `HUMAN_VERIFICATION`), the claim → minimum-evidence matrix, and the forbidden-claims list, so no agent claims something works, is fixed, or is faster/secure/thread-safe without evidence at the matching tier |
+| `swift-concurrency` | `ios-architect`, `ios-unit-test-engineer`, `ios-ui-test-engineer`, `ios-memory-performance-engineer`, `ios-legacy-auditor` — loaded only when the question involves it | async/await, actors, `Sendable`, structured/unstructured `Task`, cancellation, actor reentrancy — with the specific `STATIC_ANALYSIS` vs. concurrency-test-or-strict-mode bar a "thread-safe" claim actually needs |
+| `swiftui-engineering` | `ios-architect`, `ios-ui-test-engineer`, `ios-memory-performance-engineer`, `ios-ux-reviewer`, `ios-legacy-auditor` — loaded only when the question involves it | State-ownership (`@StateObject` vs. `@ObservedObject`), view identity, body-recomputation cost, `@EnvironmentObject` injection — split into "pattern looks correct" (`STATIC_ANALYSIS`) vs. "runtime behavior confirmed" (`RUNTIME_VERIFIED`) |
+| `ios-api-availability` | `ios-architect`, `ios-unit-test-engineer`, `ios-ui-test-engineer`, `ios-legacy-auditor` — loaded only when the question involves it | A mandatory 4-fact comparison per API (deployment target, API-introduction version, required guard, actual project compatibility) — flags the over-restrictive-guard failure mode, not just a missing guard |
+| `ios-accessibility` | `ios-ui-test-engineer`, `ios-ux-reviewer` — loaded only when the question goes beyond `ios-ux-reviewer`'s own checklist | Static review vs. runtime verification split; names `XCUIApplication().performAccessibilityAudit()` (Xcode 15+) as real `TEST_VERIFIED`-tier automated evidence, not a manual-checklist substitute |
 
 ### Knowledge library (`knowledge/`)
 
@@ -210,6 +214,20 @@ graph TD
     MEM --> REVIEWER
     FEAT --> REVIEWER
     REVIEWER --> EVID
+
+    subgraph CROSS["Cross-cutting knowledge skills — loaded only when the specific question needs one"]
+        CONCUR(["swift-concurrency"])
+        SWIFTUI(["swiftui-engineering"])
+        AVAIL(["ios-api-availability"])
+        ACCESS(["ios-accessibility"])
+    end
+
+    ARCH -.-> CROSS
+    UNIT -.-> CROSS
+    UITEST -.-> CROSS
+    MEM -.-> CROSS
+    UX -.-> CROSS
+    LEGACY -.-> CROSS
 ```
 
 There's no router or orchestrator to configure — Claude Code's own
@@ -226,6 +244,15 @@ with the same status block format again. `ios-feature-implementation`,
 own report reaches `BUILD_VERIFIED` or higher — the agent that ran the
 build/test/measurement isn't the only one who checks whether its
 report is honest about it.
+
+The four cross-cutting skills in the dashed cluster are different from
+the rest: they aren't tied to one agent's fixed procedure, they're a
+knowledge lookup an agent reaches for only when the specific question
+in front of it actually needs it (a `Task`/`actor` question, a SwiftUI
+state-ownership question, an availability check, an accessibility
+audit beyond `ios-ux-reviewer`'s own checklist). Each agent's own file
+documents exactly which trigger loads which skill — see its
+`## Related Skills` section.
 
 ## How they hand off to each other
 

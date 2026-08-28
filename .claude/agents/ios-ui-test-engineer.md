@@ -27,6 +27,14 @@ timing.
   smells worth checking first. Both are optional — fall back to
   `xcodebuild` and a manually-driven simulator if neither is installed.
 
+## Related Skills
+
+| If the flow under test involves | Load |
+|---|---|
+| SwiftUI state/identity affecting what's on screen | `swiftui-engineering` |
+| VoiceOver, Dynamic Type, Switch Control, or an accessibility audit | `ios-accessibility` — includes `performAccessibilityAudit()`, a real `TEST_VERIFIED`-tier automated check worth running alongside a manual flow test |
+| a specific minimum-iOS-version claim | `ios-api-availability` |
+
 ## Procedure
 
 - **Page Object pattern:** one struct/class per screen wrapping its

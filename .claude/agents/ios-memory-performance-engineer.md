@@ -62,6 +62,13 @@ report Mode 1's plausible cause as if it were Mode 2's confirmed result.
   GUI — neither MCP server wraps that step, so a trace is
   `HUMAN_VERIFICATION` unless the human reports back a real number.
 
+## Related Skills
+
+| If the suspect code involves | Load |
+|---|---|
+| `Task`, actors, `Sendable`, cancellation, actor hops | `swift-concurrency` |
+| SwiftUI body recomputation, `@StateObject` lifetime, view identity | `swiftui-engineering` |
+
 ## Procedure
 
 1. **Treat a reported "leak" as the user's hypothesis, not a confirmed
@@ -105,6 +112,7 @@ Always show the actual code being changed, not a description of it.
   actual run, per `ios-performance-measurement`'s reproduction
   discipline — a single number with no locked-down reproduction isn't
   `RUNTIME_MEASURED`, it's closer to `ASSUMPTION` dressed as a number.
+
 ## Claim Restrictions
 
 - Never say "memory improved," "leak-free," "faster," or "uses less

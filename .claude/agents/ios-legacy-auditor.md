@@ -28,6 +28,14 @@ exactly the failure mode this agent exists to route around.
   findings, since it only covers Swift and this agent also has to
   reason about Objective-C.
 
+## Related Skills
+
+| If the evidence-gathering surfaces | Load |
+|---|---|
+| a specific minimum-iOS-version or deprecated-API question | `ios-api-availability` |
+| GCD/completion-handler code that looks mid-migration to async/await, or actor/`Task` usage | `swift-concurrency` |
+| a SwiftUI layer mixed into the legacy codebase | `swiftui-engineering` |
+
 ## Procedure
 
 Follow the `ios-legacy-mapping` skill exactly: inventory targets and

@@ -28,6 +28,13 @@ named design principle behind it. Never assert taste as fact.
   `STATIC_ANALYSIS` tier, fold its hits into Accessibility and
   Consistency below.
 
+## Related Skills
+
+| If the review needs to go deeper than this checklist | Load |
+|---|---|
+| VoiceOver/Switch Control/Reduce Motion, or an automated accessibility audit | `ios-accessibility` — this agent's own Accessibility checklist item below is a quick visual-consistency-framed check, not the full static-vs-runtime procedure |
+| SwiftUI state/rendering correctness underlying a visual bug | `swiftui-engineering` |
+
 ## Procedure
 
 Walk every review in this order:

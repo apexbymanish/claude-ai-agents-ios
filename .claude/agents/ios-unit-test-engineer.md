@@ -31,6 +31,13 @@ the code is correct.
   `ios-evidence-reporting`'s tool-tier rule: `STATIC_ANALYSIS`, same as
   a manual read.
 
+## Related Skills
+
+| If the code under test involves | Load |
+|---|---|
+| async/await, actors, `Task`, cancellation | `swift-concurrency` |
+| a specific minimum-iOS-version claim to test against | `ios-api-availability` |
+
 ## Procedure
 
 Follow the `ios-testing-strategy` skill (identify seams → write a test

@@ -101,9 +101,10 @@ several common questions are answerable with zero app changes:
 | Question | Answer without touching the app |
 |---|---|
 | Request count, duplicates, response size/time | An HTTP proxy on the device/simulator |
-| Hangs, hitches, launch time, thermal state | An on-device Instruments trace |
-| Actual retained memory after leaving a screen | An on-device memory sample of the running process |
-| Pure algorithmic/logic time | A test target with timed assertions |
+| Hangs, hitches, launch time, thermal state | An on-device Instruments Time Profiler trace |
+| Actual retained memory after leaving a screen | An on-device memory sample via Instruments Allocations/Leaks, or the VM Tracker instrument for a page-level view of resident memory |
+| Pure algorithmic/logic time, in-process without launching Instruments | `XCTMetric` inside a test (`measure(metrics:)`), or `os_signpost` intervals viewed in Instruments' Points of Interest track |
+| Custom, code-level timing markers you want to see on a real device's timeline | `os_signpost` — cheaper and more precise than `print`-based timing, and it shows up directly in an Instruments trace |
 
 Instrumentation code is only justified for what's left after this
 table: screen-entry latency tied to a specific line, which thread a
