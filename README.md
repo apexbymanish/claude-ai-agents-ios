@@ -326,3 +326,7 @@ act on, not a gate.
 ```bash
 ./scripts/audit-agents.sh
 ```
+
+## License
+
+[MIT](LICENSE) — use, copy, modify, and redistribute freely.
