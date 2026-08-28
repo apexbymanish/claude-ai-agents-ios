@@ -1,55 +1,117 @@
 ---
 name: ios-evidence-reporting
-description: Standard for reporting task outcomes with verifiable evidence instead of confident prose. Use before writing "it works", "done", "this is safe", or "this is well-structured" at the end of any iOS agent task — implementation, testing, review, audit, or architecture consultation.
+description: Standard for reporting task outcomes with verifiable evidence instead of confident prose. Use before writing "it works", "done", "fixed", "faster", "thread-safe", or "secure" at the end of any iOS agent task — implementation, testing, review, audit, or architecture consultation.
 ---
 
 # iOS Evidence-Based Reporting
 
-Never write "Done!", "This works correctly", "This is safe", or any
-other confident-sounding claim without evidence backing it somewhere in
-the same report. A claim is not more trustworthy for being phrased
-confidently — it's less, if nothing backs it.
+AI confidence is not evidence. AI reasoning is not runtime evidence. A code
+change is not automatically a verified fix. Every claim in a report is
+backed by evidence at a specific tier — and a claim never gets reported at
+a higher tier than the evidence actually reached.
+
+## The seven evidence tiers
+
+From weakest to strongest. A claim's tier is the *weakest* link that
+actually backs it — gathering strong evidence for half a claim doesn't
+license reporting the whole claim at that strength.
+
+1. **ASSUMPTION** — a belief based on reasoning, not evidence. Never
+   reported as verified. Phrase it as a hypothesis: "likely a decoding
+   cost" not "is a decoding cost."
+2. **STATIC_ANALYSIS** — evidence from reading source, a compiler
+   diagnostic, AST/dependency inspection, or a static-analysis tool
+   (including an MCP analyzer such as `ios-agent-mcp`) run over source
+   without building or running the app. Reading the output of `grep`,
+   `wc`, or `git diff` also lands here — running a text command over
+   source is still static analysis, not runtime evidence, regardless of
+   whether the agent doing it is otherwise read-only. Example: "no
+   obvious retain cycle found during static inspection" — this does
+   **not** mean "no memory leak exists."
+3. **BUILD_VERIFIED** — the project actually compiled. Example:
+   "`xcodebuild` completed successfully."
+4. **TEST_VERIFIED** — an automated test suite ran and its result is
+   shown. Example: "42 tests passed."
+5. **RUNTIME_VERIFIED** — the app was actually launched, installed, or
+   interacted with (simulator or device) and its behavior observed — a
+   screenshot, a deep link reaching the right screen, a manual
+   walkthrough. Confirms *behavior*, not a number — see the next tier
+   for that.
+6. **RUNTIME_MEASURED** — an actual number came from actually running
+   the app: Instruments (Allocations, Leaks, Time Profiler), MetricKit,
+   XCTMetric, `os_signpost`, a launch-time or memory measurement.
+   Required for any performance or memory *improvement* claim — no
+   lower tier can support one.
+7. **HUMAN_VERIFICATION** — the agent cannot perform the verification
+   this claim needs (driving the Instruments GUI, for instance) and
+   says so explicitly, rather than guessing or silently skipping it.
+
+Tiers 3-6 all require something to have actually *run*; only 5 and 6
+require the app itself to have run. Static analysis — including an MCP
+tool's structured findings — never outranks build/test/runtime tiers,
+no matter how sophisticated the analysis.
+
+## Claim → minimum evidence matrix
+
+| Claim | Minimum evidence |
+|---|---|
+| Code compiles | `BUILD_VERIFIED` |
+| Unit/UI tests pass | `TEST_VERIFIED` |
+| A feature/flow works | `RUNTIME_VERIFIED`, or the automated tests that cover it |
+| An API is available at the stated minimum | `STATIC_ANALYSIS` (availability check) |
+| No obvious retain cycle | `STATIC_ANALYSIS` only — never "no leak exists" |
+| No runtime leak observed | `RUNTIME_MEASURED` (Instruments/Memory Graph) |
+| Memory usage improved | `RUNTIME_MEASURED`, before/after |
+| Performance improved | `RUNTIME_MEASURED`, before/after |
+| Thread-safe | `STATIC_ANALYSIS` + concurrency-relevant tests — never inspection alone |
+| Architecture preserved / consistent | `STATIC_ANALYSIS` (architecture review) |
+| Security issue addressed | `STATIC_ANALYSIS`/security review, plus a regression test where practical |
+| App Store ready | `STATIC_ANALYSIS` (code-visible checks) — metadata/screenshots still need `HUMAN_VERIFICATION` |
+
+If an agent can't reach the tier a claim needs, it reports the tier it
+actually reached and marks the gap — it never rounds up.
+
+## Never say, unless the evidence supports it
+
+Do not write these words in a final report unless the matrix above is
+satisfied for that exact claim:
+
+- **"fixed" / "working"** — unless `RUNTIME_VERIFIED` or `TEST_VERIFIED`
+  backs it.
+- **"optimized" / "faster" / "uses less memory"** — unless
+  `RUNTIME_MEASURED` before/after backs it.
+- **"leak-free"** — never claimable from `STATIC_ANALYSIS` alone.
+- **"thread-safe"** — never claimable from `STATIC_ANALYSIS` alone.
+- **"secure"** — a security review can say "no issues found in this
+  review's scope," never an unqualified "secure."
+- **"iOS [version] compatible"** — unless an availability check
+  (`STATIC_ANALYSIS` at minimum) actually ran.
+
+Use precise language instead:
+
+| Instead of | Say |
+|---|---|
+| "Fixed it." | "Implemented the proposed fix." |
+| "Build works." | "Build verified successfully." |
+| "No memory leak." | "Static inspection found no obvious retain cycle." |
+| "It's faster now." | "Memory/performance improvement was not measured." (if it wasn't) |
+| "Should be fine at runtime." | "Runtime verification is still required." |
 
 ## The status block
 
 End every report with a compact status block: one line per category
-relevant to *your* domain, each marked:
+relevant to your domain, each marked:
 
-- `✓` — verified: backed by an actual command's output, a specific
-  file:line you read, or a concrete count you produced — shown
-  elsewhere in the same report, not just asserted here.
-- `⚠` — not verified: say why in the same line, and what would verify
-  it. Never silently drop a category that matters because you didn't
-  check it — mark it `⚠`, don't omit it.
-- `✗` — checked, and it failed or a real problem was found.
+- `✓ <TIER>` — checked and fine, backed by evidence at `<TIER>`.
+- `✗ <TIER>` — checked, and a real problem was found, backed by
+  evidence at `<TIER>`.
+- `⚠` — not checked, or only an `ASSUMPTION` exists — say why, and what
+  tier would actually verify it. Never silently drop a category that
+  matters because it wasn't checked; mark it `⚠`, don't omit it.
 
-Pick the categories from your own agent's checklist. Don't force
-categories that don't apply to your role — a read-only review agent has
-no `BUILD` line; an architecture consult has no `TEST` line. Don't pad
-the block with an irrelevant category just to look thorough.
-
-### Two grades of `✓`
-
-Not every `✓` carries the same weight, and collapsing them loses
-information. Grade each `✓` by how it was actually backed:
-
-- **`(static)`** — backed by reading the code and tracing the logic to a
-  specific file:line, with no command run against the running app. Real
-  evidence, but a static read can miss what only shows up at runtime —
-  a retain cycle depends on the actual object graph at runtime, not
-  just the absence of `[weak self]` in the source.
-- **`(executed)`** — backed by actually running something against the
-  built app or its tests and reading real output: a test suite, a
-  build, an Instruments trace, a before/after measurement. Strictly
-  stronger than `(static)` for anything behavioral — memory,
-  performance, and timing claims in particular.
-
-A claim like "no memory leak" earns `✓ (static)` from reading the code
-alone — never upgrade it to a bare `✓` or imply `(executed)` when
-nothing was actually run. For any category where the gap between
-reading code and running it actually matters (memory and performance
-usually qualify), say which grade backs the claim instead of leaving it
-ambiguous.
+Pick categories from your own agent's checklist. Don't force categories
+that don't apply to your role — a read-only review agent has no `BUILD`
+line; an architecture consult has no `TEST` line.
 
 ### Example: an implementation/verification task
 
@@ -57,14 +119,14 @@ ambiguous.
 `ios-ui-test-engineer`, `ios-memory-performance-engineer`)
 
 ```
-BUILD        ✓ (executed) xcodebuild succeeded
-TEST         ✓ (executed) 24/24 tests passed
-AVAILABILITY ✓ (static) iOS 14 compatible (checked 2 new API calls)
-MEMORY       ✓ (static) no retain-cycle pattern found
-             ⚠ nothing executed — recommend an Instruments Allocations pass
-PERFORMANCE  ✓ (static) no blocking main-thread work introduced
-SECURITY     ✓ (static) token stored via existing Keychain wrapper
-DIFF         ✓ (executed) 4 files changed, reviewed end to end
+BUILD        ✓ BUILD_VERIFIED     xcodebuild succeeded
+TEST         ✓ TEST_VERIFIED      24/24 tests passed
+AVAILABILITY ✓ STATIC_ANALYSIS    iOS 14 compatible (checked 2 new API calls)
+MEMORY       ✓ STATIC_ANALYSIS    no retain-cycle pattern found
+             ⚠ HUMAN_VERIFICATION Instruments not run — recommend an Allocations pass
+PERFORMANCE  ✓ STATIC_ANALYSIS    no blocking main-thread work introduced
+SECURITY     ✓ STATIC_ANALYSIS    token stored via existing Keychain wrapper
+DIFF         ✓ STATIC_ANALYSIS    4 files changed, diff reviewed end to end
 ```
 
 ### Example: a read-only review/audit/consult task
@@ -72,29 +134,30 @@ DIFF         ✓ (executed) 4 files changed, reviewed end to end
 (`ios-architect`, `ios-ux-reviewer`, `ios-legacy-auditor`)
 
 ```
-ACCESSIBILITY   ⚠ 1 tap target below 44pt (ProfileView.swift:82)
-CONVENTIONS     ✓ (static) matches platform navigation patterns
-CONSISTENCY     ✓ (static) reuses existing button style throughout
-ARCHITECTURE    ✓ (executed) MVC-in-name-only (38 VCs >400 lines via grep,
+ACCESSIBILITY   ✗ STATIC_ANALYSIS  1 tap target below 44pt (ProfileView.swift:82)
+CONVENTIONS     ✓ STATIC_ANALYSIS  matches platform navigation patterns
+CONSISTENCY     ✓ STATIC_ANALYSIS  reuses existing button style throughout
+ARCHITECTURE    ✓ STATIC_ANALYSIS  MVC-in-name-only (38 VCs >400 lines via grep,
                 210 .shared refs via grep)
-TESTABILITY     ⚠ proposed design not yet unit-tested — no test exists
-SECURITY        ⚠ 3 leads to verify — see Security signals section
+TESTABILITY     ⚠                  proposed design not yet unit-tested — no test exists
+SECURITY        ⚠                  3 leads to verify — see Security signals section
 ```
 
-Note `ARCHITECTURE` above is graded `(executed)`, not `(static)` — the
-counts came from actually running `grep`/`wc` and reading real command
-output, not from eyeballing files. Running a command and reading its
-output is `(executed)` even for an otherwise read-only agent; `(static)`
-is reserved for claims backed only by reading source with no command run.
+Note `ARCHITECTURE` above is `STATIC_ANALYSIS`, the same tier as
+`CONVENTIONS` — running `grep`/`wc` and reading real command output is
+still reading source, not running the app, even for a read-only agent
+whose whole job is that kind of read. Don't grade a grep-derived count
+any higher than a plain code read; the strength that matters is
+*static vs. runtime*, not *manual vs. tool-assisted*.
 
 ## What this is not
 
 - Not a replacement for the full prose report each agent already
-  produces — it's a compact summary at the end, and every `✓`/`⚠`/`✗`
-  in it must be traceable to something stated in the body above it.
+  produces — it's a compact summary at the end, and every line in it
+  must be traceable to something stated in the body above it.
 - Not a demand to run tools you don't have. A read-only agent marks
-  `⚠` honestly rather than fabricating a check it couldn't perform, or
-  claiming a command-based check it has no tool to run.
-- Not a reason to invent categories. If nothing in your domain checklist
-  is relevant to a category, leave that category out entirely rather
-  than including it marked `⚠` for the sake of completeness.
+  `⚠` (or `HUMAN_VERIFICATION` for a specific claim) honestly rather
+  than fabricating a check it couldn't perform.
+- Not a reason to invent categories. If nothing in your domain
+  checklist is relevant to a category, leave it out — don't pad the
+  block to look thorough.

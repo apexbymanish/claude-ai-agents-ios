@@ -120,7 +120,7 @@ check_cross_references() {
     # Third-party MCP server names this repo documents integrating with
     # (see .mcp.json and README) -- not agents or skills defined here, so
     # they'd otherwise read as dangling references.
-    local external_names=$'ios-agent\nios-simulator\nios-simulator-mcp'
+    local external_names=$'ios-agent\nios-simulator\nios-simulator-mcp\nios-agent-mcp'
 
     all_names=$( { ls "$AGENTS_DIR" 2>/dev/null | sed 's/\.md$//'; ls "$SKILLS_DIR" 2>/dev/null; printf '%s\n' "$external_names"; } | sort -u)
     mentioned=$(grep -rhoE '`ios-[a-z-]+`' "$AGENTS_DIR" "$SKILLS_DIR" 2>/dev/null | tr -d '`' | sort -u)
