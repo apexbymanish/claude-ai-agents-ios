@@ -3,8 +3,9 @@
 A drop-in set of [Claude Code](https://claude.com/claude-code) subagents
 and Skills that turn Claude Code into a specialized iOS development
 team: architecture, unit testing, UI testing, memory/performance,
-UI/UX review, security, and legacy-codebase auditing — each one
-auto-invoked based on what you ask, no manual switching required.
+UI/UX review, security, App Store readiness, and legacy-codebase
+auditing — each one auto-invoked based on what you ask, no manual
+switching required.
 
 ## What's included
 
@@ -19,6 +20,7 @@ auto-invoked based on what you ask, no manual switching required.
 | `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob, Skill (read-only) |
 | `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill (read-only) |
 | `ios-security-reviewer` | ask for a security review, "is this secure", vulnerability check, or auth/session audit | Read, Grep, Glob, Bash, Skill (read-only) |
+| `ios-app-store-reviewer` | ask "is this ready to submit", "will this get rejected", or to check App Store compliance | Read, Grep, Glob, Bash, Skill (read-only) |
 
 ### Skills (`.claude/skills/`)
 
@@ -27,6 +29,7 @@ auto-invoked based on what you ask, no manual switching required.
 | `ios-testing-strategy` | `ios-unit-test-engineer`, `ios-ui-test-engineer` | Concrete seams → test-double → red/green procedure |
 | `ios-legacy-mapping` | `ios-legacy-auditor` | Concrete inventory → detect-architecture → bridging-risk → security-signal → summary-doc procedure |
 | `ios-security-review` | `ios-security-reviewer` | 8-area audit: storage/privacy → transport → authN/session → input validation → deep links → third-party SDKs → code hygiene → entitlements |
+| `ios-app-store-readiness` | `ios-app-store-reviewer` | Pre-submission audit: privacy manifest → export compliance → permission descriptions → App Tracking Transparency → Sign in with Apple parity → unused entitlements → rejection triggers |
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
 | `ios-evidence-reporting` | All 6 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed) so no agent claims something works, passes, or is safe without evidence already shown in its report |
 
@@ -90,6 +93,12 @@ A typical flow, though you never need to invoke any of this by name:
    `ios-legacy-auditor`, and `ios-feature-implementation` also flag
    lighter, scoped security concerns as part of their own work and
    point here for anything that warrants a full audit.
+7. **About to submit to the App Store?** `ios-app-store-reviewer` checks
+   the code-visible submission blockers (privacy manifest, permission
+   descriptions, export compliance, Sign in with Apple parity) — it's a
+   separate concern from `ios-security-reviewer` even though they share
+   some ground (entitlements, transport security), so run both before a
+   release if either is relevant.
 
 ## Evidence over assertion
 
