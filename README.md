@@ -87,6 +87,52 @@ Nothing else to configure — Claude Code reads each agent's `description`
 frontmatter and invokes the right one automatically based on your
 request.
 
+## How it fits together
+
+```mermaid
+graph TD
+    CC["Claude Code<br/>reads every agent's description,<br/>auto-selects based on what you ask"]
+
+    CC --> ARCH[ios-architect]
+    CC --> UNIT[ios-unit-test-engineer]
+    CC --> UITEST[ios-ui-test-engineer]
+    CC --> MEM[ios-memory-performance-engineer]
+    CC --> UX[ios-ux-reviewer]
+    CC --> LEGACY[ios-legacy-auditor]
+    CC --> SEC[ios-security-reviewer]
+    CC --> STORE[ios-app-store-reviewer]
+
+    ARCH --> KARCH[["knowledge/architecture-patterns.md"]]
+    ARCH -. new feature .-> FEAT(["ios-feature-implementation (skill)"])
+
+    UNIT --> TESTSKILL(["ios-testing-strategy (skill)"])
+    UITEST --> TESTSKILL
+
+    MEM --> KMEM[["knowledge/memory-performance.md"]]
+    UX --> KUX[["knowledge/design-philosophy.md"]]
+    LEGACY --> LEGSKILL(["ios-legacy-mapping (skill)"])
+    SEC --> SECSKILL(["ios-security-review (skill)"])
+    STORE --> STORESKILL(["ios-app-store-readiness (skill)"])
+
+    ARCH --> EVID
+    UNIT --> EVID
+    UITEST --> EVID
+    MEM --> EVID
+    UX --> EVID
+    LEGACY --> EVID
+    SEC --> EVID
+    STORE --> EVID
+    FEAT --> EVID
+
+    EVID(["ios-evidence-reporting (skill)<br/>every report closes with this status block"])
+```
+
+There's no router or orchestrator to configure — Claude Code's own
+description-matching *is* the dispatch layer. Each agent is a leaf that
+either reads a `knowledge/*.md` file for deep reference material, follows
+a `Skill` for a shared procedure, or both, and every path converges on
+the same evidence-reporting standard at the end.
+
 ## How they hand off to each other
 
 A typical flow, though you never need to invoke any of this by name:
