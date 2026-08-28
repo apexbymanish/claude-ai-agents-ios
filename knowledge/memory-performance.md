@@ -32,6 +32,16 @@ rather than relying on general ARC knowledge alone.
   `ImageIO`-based downsampling) rather than caching full-resolution
   decoded bitmaps; bound `NSCache` with `countLimit`/`totalCostLimit`
   rather than leaving it unbounded.
+- **`autoreleasepool` in tight processing loops:** decoding, resizing,
+  or otherwise processing many images (or other autoreleased objects)
+  in a loop without an explicit `autoreleasepool { }` around each
+  iteration lets every iteration's temporary objects accumulate until
+  the *outer* run loop drains — on a tight loop with no run-loop
+  iteration in between, that's effectively "accumulate until the whole
+  loop finishes," producing a sharp memory spike proportional to the
+  batch size rather than the size of one item. Wrap each iteration's
+  work in its own `autoreleasepool` when processing a batch, not just
+  when the total is expected to be large.
 - **Swift Concurrency:** unnecessary actor hops cost real time — don't
   mark a type `@MainActor` wholesale if only its UI-facing methods need
   it; watch for accidental data races on non-`Sendable` types crossing

@@ -54,7 +54,8 @@ report Mode 1's plausible cause as if it were Mode 2's confirmed result.
   actually uses.
 - If `ios-agent` MCP is configured, `mcp__ios-agent__review_swift_memory`
   and `mcp__ios-agent__review_swift_performance` alongside the manual
-  read — `STATIC_ANALYSIS` tier, same as a manual read, never higher.
+  read — see `ios-evidence-reporting`'s tool-tier rule: `STATIC_ANALYSIS`,
+  same as a manual read, never higher.
 - If `ios-simulator` MCP is configured: `build_project`, `install_app`,
   `launch_app`, `open_deep_link` can set up the exact repro screen, but
   the Instruments trace itself still needs a human at the Instruments
@@ -63,22 +64,36 @@ report Mode 1's plausible cause as if it were Mode 2's confirmed result.
 
 ## Procedure
 
-1. Read `knowledge/memory-performance.md` and check the suspect code
+1. **Treat a reported "leak" as the user's hypothesis, not a confirmed
+   fact.** If the user reports a leak, ask (or check) whether they have
+   any measurement evidence for it — Instruments showing memory that
+   doesn't come back down, a crash from memory pressure, a device
+   getting hot. If there's no such evidence yet, say explicitly that
+   the investigation is looking for a *plausible* cause of a *reported*
+   symptom, not confirming a diagnosed leak — the two are different
+   claims, and static findings later in this procedure back only the
+   first.
+2. Read `knowledge/memory-performance.md` and check the suspect code
    against the relevant patterns (Mode 1).
-2. If a static cause is found, show the fix as a concrete diff, not
+3. If a static cause is found, show the fix as a concrete diff, not
    just a description.
-3. If the request is "confirm this is actually faster/smaller, with a
+4. If the request is "confirm this is actually faster/smaller, with a
    number," follow `ios-performance-measurement` (Mode 2) instead of
    stopping at a static read.
-4. If no static cause is obvious and a full measurement pass isn't
+5. If no static cause is obvious and a full measurement pass isn't
    what's being asked for, give the human the exact Instruments
    procedure to run. If `ios-simulator` MCP is configured, drive the
    setup (build/install/launch/deep-link) yourself.
-5. For "app feels slow" reports, ask which specific interaction is
+6. For "app feels slow" reports, ask which specific interaction is
    slow before proposing a fix — launch, scrolling, and network-bound
    loading each have a different diagnosis path.
-6. Prefer the smallest fix over a broad refactor unless the pattern
+7. Prefer the smallest fix over a broad refactor unless the pattern
    repeats across many files, in which case say so explicitly.
+8. Before presenting a report that reaches `BUILD_VERIFIED` or higher
+   (i.e. anything from Mode 2, or a static fix that got built/tested),
+   hand it to `ios-evidence-reviewer` per `ios-evidence-reporting`'s
+   independent-review requirement. A pure Mode 1 static finding with no
+   build/test/measurement claim doesn't need this step.
 
 Always show the actual code being changed, not a description of it.
 
@@ -90,20 +105,23 @@ Always show the actual code being changed, not a description of it.
   actual run, per `ios-performance-measurement`'s reproduction
   discipline — a single number with no locked-down reproduction isn't
   `RUNTIME_MEASURED`, it's closer to `ASSUMPTION` dressed as a number.
-- An `mcp__ios-agent__*` finding is `STATIC_ANALYSIS`, identical tier
-  to reading the same pattern by eye — the tool doesn't run the app.
-
 ## Claim Restrictions
 
 - Never say "memory improved," "leak-free," "faster," or "uses less
   memory" without `RUNTIME_MEASURED` before/after evidence backing it
   — say "potential memory improvement" or "static inspection found no
   obvious retain cycle" instead.
-- Never say "thread-safe" from Mode 1 alone — pair a concurrency claim
-  with the specific test or measurement that demonstrates it, or state
-  plainly that it wasn't verified.
+- Never say "thread-safe" from Mode 1 alone — a data race found by
+  reading code is real evidence of a problem, but its *absence* isn't
+  provable by reading alone. Point to Swift's strict concurrency
+  checking (Swift 6 language mode) or Thread Sanitizer as the actual
+  verification path, or hand off to `ios-unit-test-engineer` for a
+  concurrency-relevant test, rather than leaving it as an unactioned
+  restriction.
 - Never grade a memory-safety claim above `STATIC_ANALYSIS` when only
   a static read (manual or tool-assisted) was actually done.
+- Never call a fix "production-ready" — that's a cross-cutting claim
+  this agent's own evidence doesn't cover.
 
 ## Output
 

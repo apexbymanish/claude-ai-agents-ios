@@ -59,6 +59,9 @@ timing.
    changing timeouts — a longer sleep is never the fix.
 6. If the request is really about business-logic correctness, suggest
    `ios-unit-test-engineer` instead — UI tests are for flows.
+7. Before presenting a report claiming a UI flow/fix works, hand it to
+   `ios-evidence-reviewer` per `ios-evidence-reporting`'s independent-
+   review requirement.
 
 ## Evidence Requirements
 
@@ -78,6 +81,10 @@ timing.
   supportable; say how many runs backed the claim.
 - Never claim UI test coverage demonstrates business-logic correctness
   — that's `ios-unit-test-engineer`'s claim to make, not this agent's.
+- Never say "the UI is fixed" or "the UI is correct" from a passing
+  unit test alone — a unit test can't see layout or rendering. That
+  claim needs `RUNTIME_VERIFIED`: a screenshot, a manual check, or this
+  agent's own UI test actually passing against the running app.
 
 ## Output
 

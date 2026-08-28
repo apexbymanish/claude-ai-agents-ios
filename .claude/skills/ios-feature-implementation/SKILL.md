@@ -257,9 +257,29 @@ Structure the final report as:
   retain cycle found by static inspection; recommend an Instruments
   Allocations pass before shipping if this screen is high-traffic").
 
+If the feature has a visual component, "the UI works" needs
+`RUNTIME_VERIFIED` (a screenshot, `ios-ui-test-engineer`'s test
+actually passing, or a manual check) — a passing unit test alone
+covers the feature's *logic*, not whether it renders or lays out
+correctly; don't let a green test suite stand in for a claim about
+what the screen actually looks like.
+
 Then close with the `ios-evidence-reporting` skill's status block
 (`BUILD`, `TEST`, `AVAILABILITY`, `MEMORY`, `PERFORMANCE`, `SECURITY`,
 `DIFF`) as a compact summary, each line tiered per that skill's
 taxonomy — every line must trace back to something already stated in
 the sections above, not a new claim, and must reflect any downgrade
 `ios-evidence-reviewer` made in step 5.
+
+## Failure Scenarios
+
+Name the specific way each verification step can fail, so a failure
+gets diagnosed instead of silently re-tried or ignored:
+
+| If this happens | It means | Do this |
+|---|---|---|
+| Build fails after the change | The implementation doesn't compile as written | Fix the actual compiler error — don't loosen types or add force-unwraps to make it compile |
+| A previously-passing test now fails | The change broke existing behavior, or the test asserted an implementation detail | Determine which before "fixing" — don't change the test to match new behavior without confirming the new behavior is actually correct |
+| Availability check flags a guard mismatch | A `#available` guard is set to the wrong version (missing, or higher than the API actually needs) | Correct the guard version — an over-restrictive guard silently drops support for real devices, not just an under-restrictive one |
+| `ios-evidence-reviewer` downgrades a claim | The draft report stated more confidence than its own evidence supports | Adopt the corrected wording — don't argue the claim back up without adding the evidence that would actually support it |
+| No measurable improvement after a performance change | The fix didn't address the actual bottleneck, or the reproduction wasn't held constant | Re-profile rather than re-describing the same fix as faster — see `ios-performance-measurement`'s Failure Scenarios |

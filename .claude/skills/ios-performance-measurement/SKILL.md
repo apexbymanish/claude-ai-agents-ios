@@ -284,3 +284,15 @@ checked at all is `ASSUMPTION`, and say so as one — never dress a guess
 up as a finding. Never write a percentage without the raw before/after
 numbers next to it — "219 → 12" can be checked; "94% faster" on its own
 cannot.
+
+## Failure Scenarios
+
+Name the specific way a measurement pass can fail, rather than
+re-describing the same fix as faster on a second guess:
+
+| If this happens | It means | Do this |
+|---|---|---|
+| No measurable difference after the fix | The fix didn't address the actual bottleneck the baseline pointed to, or the reproduction drifted between runs | Re-check the reproduction is identical (device, build config, data scale, action sequence, cache state) before concluding the fix didn't work; if it's genuinely identical, the layer chosen in BASELINE was wrong — go back to Choose the one thing to measure |
+| The "after" number is worse | The change added overhead somewhere the baseline didn't isolate, or a different layer regressed | Report the regression honestly with the number — don't discard the after-measurement or attribute it to "noise" without the median-of-three check |
+| Timing numbers won't stabilize across runs | Contention (another simulator booted, background work, thermal throttling) is inflating variance | Recheck the single-booted-simulator rule and thermal state; count-based metrics (requests, allocations) are unaffected by this and can substitute for a timing claim if the actual question is answerable that way |
+| Instrumentation strings still appear in the release build after cleanup | The `#if DEBUG` guard was missed on a call site, or a hook lives outside the single file convention | Fix the specific call site — don't ship with instrumentation left in "because it's harmless"; it's a permanent record of a debugging convenience, and each site skipped is a support burden the guard was meant to prevent |

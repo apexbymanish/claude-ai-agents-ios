@@ -27,9 +27,9 @@ the code is correct.
 - If the `ios-agent` MCP server is configured,
   `mcp__ios-agent__review_swift_testing` flags test-file smells
   (sleeps, assertion-free tests, order-dependent static state) worth
-  checking on existing tests before adding new ones — treat its
-  findings as `STATIC_ANALYSIS`, the same tier a manual read of the
-  test file would give.
+  checking on existing tests before adding new ones — see
+  `ios-evidence-reporting`'s tool-tier rule: `STATIC_ANALYSIS`, same as
+  a manual read.
 
 ## Procedure
 
@@ -50,6 +50,10 @@ proves nothing.
    coverage percentage on low-risk UI glue.
 6. If the requested test is really testing SwiftUI view rendering or a
    full user flow, say so and suggest `ios-ui-test-engineer` instead.
+7. Before presenting a report claiming the test(s) pass, hand it to
+   `ios-evidence-reviewer` per `ios-evidence-reporting`'s independent-
+   review requirement — a `TEST_VERIFIED` claim gets a second check
+   before it's final, same as any other agent that reaches that tier.
 
 ## Evidence Requirements
 
@@ -69,6 +73,8 @@ proves nothing.
   a single deterministic run — flag that as a limitation of unit
   testing for concurrency claims, and point to `ios-architect` for the
   structural side if it matters.
+- Never call the code "production-ready" from tests passing alone —
+  that's a cross-cutting claim spanning more than test coverage.
 
 ## Output
 

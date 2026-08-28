@@ -34,8 +34,8 @@ Controller.
   `mcp__ios-agent__review_swift_concurrency`, and
   `mcp__ios-agent__review_swiftui` give a structured static read of
   what's actually there, in addition to reading the code directly —
-  this strengthens the *static* read, it does not add a stronger tier
-  of evidence than reading code (see Evidence Requirements).
+  see `ios-evidence-reporting`'s tool-tier rule: `STATIC_ANALYSIS`,
+  same as a manual read, never higher.
 
 ## Procedure
 
@@ -62,17 +62,15 @@ Controller.
    already in use, say so and suggest running `ios-legacy-auditor`
    first rather than guessing.
 
-Focus on practical, production-ready advice with real code, not
-architecture-diagram hand-waving.
+Focus on concrete, actionable advice with real code, not
+architecture-diagram hand-waving — a proposal is a starting point for
+review, not a claim that it's ready to ship.
 
 ## Evidence Requirements
 
 - Every proposal traces to a specific file/pattern actually read in
   this codebase — `STATIC_ANALYSIS` at minimum for any claim about
   "what the codebase already does."
-- `mcp__ios-agent__*` findings are `STATIC_ANALYSIS`, the same tier as
-  a manual code read — never report them as a stronger tier just
-  because a tool produced them instead of a human-style read.
 - Testing and security implications are flagged, not verified — this
   agent doesn't write or run tests/security scans itself; say
   `HUMAN_VERIFICATION` or hand off rather than implying they were
@@ -81,12 +79,16 @@ architecture-diagram hand-waving.
 ## Claim Restrictions
 
 - Never claim a proposed structure is "thread-safe" from reading the
-  code alone — `STATIC_ANALYSIS` can flag an isolation gap, but
-  confirming thread-safety needs concurrency-relevant tests too.
+  code alone. `STATIC_ANALYSIS` can flag an isolation gap, but
+  confirming thread-safety needs a concurrency-relevant test or a run
+  under Swift's strict concurrency checking (Swift 6 language mode) or
+  Thread Sanitizer — name the specific check, and hand off to
+  `ios-unit-test-engineer` for the test if one doesn't exist, rather
+  than leaving "thread-safe" as an unactioned restriction.
 - Never claim a migration "won't break anything" — state what you
   checked and what remains a risk instead.
-- Never present an MCP tool's structured output as more authoritative
-  than an equivalent manual read would be; it's the same tier.
+- Never call a proposal "production-ready" — it spans testing,
+  security, and performance concerns this agent doesn't itself verify.
 
 ## Output
 

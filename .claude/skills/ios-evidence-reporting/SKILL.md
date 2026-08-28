@@ -1,6 +1,6 @@
 ---
 name: ios-evidence-reporting
-description: Standard for reporting task outcomes with verifiable evidence instead of confident prose. Use before writing "it works", "done", "fixed", "faster", "thread-safe", or "secure" at the end of any iOS agent task — implementation, testing, review, audit, or architecture consultation.
+description: Standard for reporting task outcomes with verifiable evidence instead of confident prose. Use before writing "it works", "done", "fixed", "faster", "thread-safe", "secure", or "production-ready" at the end of any iOS agent task — implementation, testing, review, audit, or architecture consultation.
 ---
 
 # iOS Evidence-Based Reporting
@@ -51,13 +51,41 @@ require the app itself to have run. Static analysis — including an MCP
 tool's structured findings — never outranks build/test/runtime tiers,
 no matter how sophisticated the analysis.
 
+### MCP/tool-assisted analysis is still whatever tier it actually is
+
+Canonical rule, referenced rather than re-derived: an MCP server's
+output is graded by what it actually did, not by the fact that a tool
+(rather than a human) did it.
+
+- `ios-agent`-style servers are static analyzers — they read source and
+  never build or run the app. Their findings are `STATIC_ANALYSIS`,
+  identical tier to a manual code read, never higher, no matter how
+  structured or confident-looking their output is.
+- `ios-simulator`-style servers actually build, install, and launch the
+  app — their `build_project`/`run_tests`/`launch_app`/`screenshot`
+  output can genuinely earn `BUILD_VERIFIED`, `TEST_VERIFIED`, or
+  `RUNTIME_VERIFIED`, because the app actually ran. It still cannot
+  produce `RUNTIME_MEASURED` on its own unless it reports an actual
+  measured number (a screenshot confirms behavior, not a quantity).
+
+### Independent review requirement
+
+Any report reaching `BUILD_VERIFIED` or higher — not just
+`STATIC_ANALYSIS` — is handed to `ios-evidence-reviewer` before being
+presented as final. The agent that ran the build/test/measurement is
+not the sole authority on whether its own report is honest about it;
+see `ios-evidence-reviewer` for what it checks. Skip this only for a
+report making no claim above `STATIC_ANALYSIS`/`ASSUMPTION` (a pure
+read-only consult has nothing for the reviewer to add).
+
 ## Claim → minimum evidence matrix
 
 | Claim | Minimum evidence |
 |---|---|
 | Code compiles | `BUILD_VERIFIED` |
 | Unit/UI tests pass | `TEST_VERIFIED` |
-| A feature/flow works | `RUNTIME_VERIFIED`, or the automated tests that cover it |
+| A feature's logic/behavior is correct | `TEST_VERIFIED` (the tests that exercise it) |
+| The UI renders/looks/behaves correctly | `RUNTIME_VERIFIED` — a passing unit test cannot confirm a visual or layout claim; something has to actually be seen running |
 | An API is available at the stated minimum | `STATIC_ANALYSIS` (availability check) |
 | No obvious retain cycle | `STATIC_ANALYSIS` only — never "no leak exists" |
 | No runtime leak observed | `RUNTIME_MEASURED` (Instruments/Memory Graph) |
@@ -86,6 +114,12 @@ satisfied for that exact claim:
   review's scope," never an unqualified "secure."
 - **"iOS [version] compatible"** — unless an availability check
   (`STATIC_ANALYSIS` at minimum) actually ran.
+- **"production-ready"** — never claimable by any single agent. It's a
+  cross-cutting claim spanning build, tests, security, performance,
+  accessibility, and App Store readiness at once; no one specialist's
+  evidence covers all of it. State which specific checks passed
+  instead ("build verified, tests pass, no security findings in this
+  review's scope") and leave the umbrella claim unmade.
 
 Use precise language instead:
 
@@ -96,6 +130,7 @@ Use precise language instead:
 | "No memory leak." | "Static inspection found no obvious retain cycle." |
 | "It's faster now." | "Memory/performance improvement was not measured." (if it wasn't) |
 | "Should be fine at runtime." | "Runtime verification is still required." |
+| "This is production-ready." | "Build/tests/security review passed; App Store readiness and UX review are separate checks not yet run." |
 
 ## The status block
 
