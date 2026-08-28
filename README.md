@@ -31,7 +31,21 @@ switching required.
 | `ios-security-review` | `ios-security-reviewer` | 8-area audit: storage/privacy → transport → authN/session → input validation → deep links → third-party SDKs → code hygiene → entitlements |
 | `ios-app-store-readiness` | `ios-app-store-reviewer` | Pre-submission audit: privacy manifest → export compliance → permission descriptions → App Tracking Transparency → Sign in with Apple parity → unused entitlements → rejection triggers |
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
-| `ios-evidence-reporting` | All 6 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed) so no agent claims something works, passes, or is safe without evidence already shown in its report |
+| `ios-evidence-reporting` | All 8 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed) so no agent claims something works, passes, or is safe without evidence already shown in its report |
+
+### Knowledge library (`knowledge/`)
+
+Deep reference material lives here instead of inside agent bodies, so
+each agent stays focused on *when to act* and *what procedure to
+follow*, while the knowledge file is the *source of truth for what to
+check*. Agents read these with the `Read` tool when relevant — no
+extra configuration needed.
+
+| File | Referenced by | Contents |
+|---|---|---|
+| `memory-performance.md` | `ios-memory-performance-engineer` | ARC/Instruments/image/concurrency fundamentals plus framework-specific patterns (RxSwift, WKWebView, PDFKit, Core Data, Firebase, CocoaPods, Keychain, third-party presentation libraries, UICollectionView/UITableView, SwiftUI/UIKit bridges, AVFoundation, CoreLocation, URLSession) |
+| `architecture-patterns.md` | `ios-architect` | Pattern/decision criteria: MVVM/Clean/VIPER, Swift Concurrency, modularization, persistence, navigation, DI, security-aware structure |
+| `design-philosophy.md` | `ios-ux-reviewer` | Apple HIG, Dieter Rams' ten principles applied to iOS, Nielsen Norman Group heuristics, and the named references list |
 
 ### Template
 
@@ -48,6 +62,7 @@ Copy what you need into your iOS project's repo root:
 mkdir -p /path/to/your-ios-project/.claude
 cp -r .claude/agents /path/to/your-ios-project/.claude/
 cp -r .claude/skills /path/to/your-ios-project/.claude/
+cp -r knowledge /path/to/your-ios-project/knowledge
 cp CLAUDE.md.template /path/to/your-ios-project/CLAUDE.md   # then edit it
 ```
 
@@ -55,11 +70,18 @@ cp CLAUDE.md.template /path/to/your-ios-project/CLAUDE.md   # then edit it
 # Or symlink instead of copying, to stay in sync across multiple projects:
 ln -s /path/to/claude-ai-agents-ios/.claude/agents /path/to/your-ios-project/.claude/agents
 ln -s /path/to/claude-ai-agents-ios/.claude/skills /path/to/your-ios-project/.claude/skills
+ln -s /path/to/claude-ai-agents-ios/knowledge /path/to/your-ios-project/knowledge
 ```
+
+The `knowledge/` folder must live at your project's repo root (alongside
+`.claude/`) — agents reference it by that relative path.
 
 For personal (cross-project) use instead of per-project, copy into
 `~/.claude/agents/` and `~/.claude/skills/` instead — Claude Code merges
-personal and project-level agents/skills automatically.
+personal and project-level agents/skills automatically. Note that
+`knowledge/` is referenced as a repo-relative path, so for personal use
+you'd still need `knowledge/` present at each project's root (symlinking
+it in per-project is simplest).
 
 Nothing else to configure — Claude Code reads each agent's `description`
 frontmatter and invokes the right one automatically based on your
@@ -116,5 +138,5 @@ as if it were verified.
 asserted taste: Apple's Human Interface Guidelines, Dieter Rams' ten
 principles of good design, Don Norman's *The Design of Everyday Things*,
 Nielsen Norman Group's usability heuristics, and *Refactoring UI* for
-concrete visual judgment calls. See the agent file itself for how each
-is applied to iOS specifically.
+concrete visual judgment calls. See `knowledge/design-philosophy.md`
+for how each is applied to iOS specifically.
