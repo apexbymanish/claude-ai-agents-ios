@@ -28,20 +28,43 @@ categories that don't apply to your role — a read-only review agent has
 no `BUILD` line; an architecture consult has no `TEST` line. Don't pad
 the block with an irrelevant category just to look thorough.
 
+### Two grades of `✓`
+
+Not every `✓` carries the same weight, and collapsing them loses
+information. Grade each `✓` by how it was actually backed:
+
+- **`(static)`** — backed by reading the code and tracing the logic to a
+  specific file:line, with no command run against the running app. Real
+  evidence, but a static read can miss what only shows up at runtime —
+  a retain cycle depends on the actual object graph at runtime, not
+  just the absence of `[weak self]` in the source.
+- **`(executed)`** — backed by actually running something against the
+  built app or its tests and reading real output: a test suite, a
+  build, an Instruments trace, a before/after measurement. Strictly
+  stronger than `(static)` for anything behavioral — memory,
+  performance, and timing claims in particular.
+
+A claim like "no memory leak" earns `✓ (static)` from reading the code
+alone — never upgrade it to a bare `✓` or imply `(executed)` when
+nothing was actually run. For any category where the gap between
+reading code and running it actually matters (memory and performance
+usually qualify), say which grade backs the claim instead of leaving it
+ambiguous.
+
 ### Example: an implementation/verification task
 
 (`ios-feature-implementation`, `ios-unit-test-engineer`,
 `ios-ui-test-engineer`, `ios-memory-performance-engineer`)
 
 ```
-BUILD        ✓ xcodebuild succeeded
-TEST         ✓ 24/24 tests passed
-AVAILABILITY ✓ iOS 14 compatible (checked 2 new API calls)
-MEMORY       ✓ static inspection, no retain-cycle pattern found
-             ⚠ Instruments not executed — recommend an Allocations pass
-PERFORMANCE  ✓ no blocking main-thread work introduced
-SECURITY     ✓ token stored via existing Keychain wrapper
-DIFF         ✓ 4 files changed, reviewed end to end
+BUILD        ✓ (executed) xcodebuild succeeded
+TEST         ✓ (executed) 24/24 tests passed
+AVAILABILITY ✓ (static) iOS 14 compatible (checked 2 new API calls)
+MEMORY       ✓ (static) no retain-cycle pattern found
+             ⚠ nothing executed — recommend an Instruments Allocations pass
+PERFORMANCE  ✓ (static) no blocking main-thread work introduced
+SECURITY     ✓ (static) token stored via existing Keychain wrapper
+DIFF         ✓ (executed) 4 files changed, reviewed end to end
 ```
 
 ### Example: a read-only review/audit/consult task
@@ -50,12 +73,19 @@ DIFF         ✓ 4 files changed, reviewed end to end
 
 ```
 ACCESSIBILITY   ⚠ 1 tap target below 44pt (ProfileView.swift:82)
-CONVENTIONS     ✓ matches platform navigation patterns
-CONSISTENCY     ✓ reuses existing button style throughout
-ARCHITECTURE    ✓ MVC-in-name-only (38 VCs >400 lines, 210 .shared refs)
+CONVENTIONS     ✓ (static) matches platform navigation patterns
+CONSISTENCY     ✓ (static) reuses existing button style throughout
+ARCHITECTURE    ✓ (executed) MVC-in-name-only (38 VCs >400 lines via grep,
+                210 .shared refs via grep)
 TESTABILITY     ⚠ proposed design not yet unit-tested — no test exists
 SECURITY        ⚠ 3 leads to verify — see Security signals section
 ```
+
+Note `ARCHITECTURE` above is graded `(executed)`, not `(static)` — the
+counts came from actually running `grep`/`wc` and reading real command
+output, not from eyeballing files. Running a command and reading its
+output is `(executed)` even for an otherwise read-only agent; `(static)`
+is reserved for claims backed only by reading source with no command run.
 
 ## What this is not
 
