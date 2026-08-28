@@ -12,11 +12,11 @@ based on what you ask, no manual switching required.
 
 | Agent | Invoked when you... | Tools |
 |---|---|---|
-| `ios-architect` | start a new feature/module, ask "how should I structure this", plan a refactor, choose MVVM/Clean/VIPER, decide on DI or SwiftData vs. Core Data | Read, Grep, Glob, Write, Edit |
+| `ios-architect` | start a new feature/module, ask "how should I structure this", plan a refactor, choose MVVM/Clean/VIPER, decide on DI or SwiftData vs. Core Data | Read, Grep, Glob, Write, Edit, Skill |
 | `ios-unit-test-engineer` | ask for tests, test coverage, TDD, or to make code testable | Read, Grep, Glob, Write, Edit, Bash, Skill |
 | `ios-ui-test-engineer` | ask for UI tests, debug a flaky UI test, or set up snapshot testing | Read, Grep, Glob, Write, Edit, Bash, Skill |
-| `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | Read, Grep, Glob, Bash, Edit |
-| `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob (read-only) |
+| `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | Read, Grep, Glob, Bash, Edit, Skill |
+| `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob, Skill (read-only) |
 | `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill (read-only) |
 
 ### Skills (`.claude/skills/`)
@@ -26,6 +26,7 @@ based on what you ask, no manual switching required.
 | `ios-testing-strategy` | `ios-unit-test-engineer`, `ios-ui-test-engineer` | Concrete seams → test-double → red/green procedure |
 | `ios-legacy-mapping` | `ios-legacy-auditor` | Concrete inventory → detect-architecture → bridging-risk → security-signal → summary-doc procedure |
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
+| `ios-evidence-reporting` | All 6 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed) so no agent claims something works, passes, or is safe without evidence already shown in its report |
 
 ### Template
 
@@ -81,6 +82,16 @@ A typical flow, though you never need to invoke any of this by name:
 5. **Something feels slow or leaks memory?** `ios-memory-performance-engineer`
    reads the code for static causes first, and gives you the exact
    Instruments procedure when it can't be found by reading alone.
+
+## Evidence over assertion
+
+Every agent in this repo ends its report with the `ios-evidence-reporting`
+skill's status block instead of a bare "Done! It works." A build-and-test
+task shows `BUILD`/`TEST`/`DIFF` lines backed by real command output; a
+read-only review shows `ACCESSIBILITY`/`ARCHITECTURE`/`SECURITY` lines
+backed by file:line citations and counts. Anything not actually checked
+is marked `⚠` and explained — never silently dropped, never asserted
+as if it were verified.
 
 ## Design philosophy
 

@@ -49,6 +49,10 @@ security) → map module/dependency boundaries → produce a
 7. If the codebase turns out to be well-structured and documented
    already, say so plainly rather than manufacturing findings to
    justify the audit.
+8. Close the summary with the `ios-evidence-reporting` skill's status
+   block (e.g. `ARCHITECTURE`, `BRIDGING`, `SECURITY`, `MODULES`) —
+   each line backed by a count or file already cited above, `⚠` for
+   anything you couldn't determine rather than guessing.
 
 Only use read/search tools and read-only shell commands (`find`,
 `grep`, `wc`, `xcodebuild -list`) — never modify files.

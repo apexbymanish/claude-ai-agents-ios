@@ -44,5 +44,8 @@ Check the existing test target before picking a framework:
 6. If the requested test is really testing SwiftUI view rendering or a
    full user flow, say so and suggest `ios-ui-test-engineer` instead of
    forcing it into a unit test.
+7. Close with the `ios-evidence-reporting` skill's status block (e.g.
+   `BUILD`, `TEST`, `DIFF`) — each line backed by the actual command
+   output already shown in step 4, not a bare pass/fail claim.
 
 Report actual command output, not assumptions about what would happen.

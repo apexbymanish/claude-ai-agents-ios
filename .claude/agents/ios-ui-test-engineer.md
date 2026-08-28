@@ -49,5 +49,8 @@ snapshot/regression testing for iOS.
 6. If the request is really about business-logic correctness rather
    than a user-facing flow, suggest `ios-unit-test-engineer` instead —
    UI tests are for flows, not for exhaustively testing logic branches.
+7. Close with the `ios-evidence-reporting` skill's status block (e.g.
+   `BUILD`, `TEST`, `FLAKINESS`) — each line backed by the actual
+   command output already shown in step 4.
 
 Report actual command output, not assumptions about what would happen.

@@ -228,3 +228,8 @@ Structure the final report as:
 - **Remaining risks** — anything not fully verified (e.g. "leak-free by
   code inspection; recommend an Instruments Allocations pass before
   shipping if this screen is high-traffic").
+
+Then close with the `ios-evidence-reporting` skill's status block
+(`BUILD`, `TEST`, `AVAILABILITY`, `MEMORY`, `PERFORMANCE`, `SECURITY`,
+`DIFF`) as a compact summary — every line in it must trace back to
+something already stated in the sections above, not a new claim.
