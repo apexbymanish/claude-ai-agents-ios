@@ -224,7 +224,22 @@ finding, unless you've actually traced the data flow and confirmed it.
 This list is scoped to what a single feature touches. For a full,
 dedicated security audit of a broader area, use `ios-security-reviewer`.
 
-## 5. Report
+## 5. Independent review
+
+The agent that implemented a change is not the sole authority on
+whether it's correct — draft the report from steps 4 above, then hand
+it (with the diff) to `ios-evidence-reviewer` before presenting it as
+final. It checks every claim in the draft against the evidence actually
+shown and downgrades anything overclaimed — "memory usage improved"
+with no measurement becomes "memory optimization implemented; runtime
+improvement not measured," for instance.
+
+Skip this step only for genuinely trivial changes making no
+build/test/runtime/memory/performance/security claim at all (e.g. a
+comment-only or copy-only edit) — anything claiming a tier from the
+`ios-evidence-reporting` matrix gets reviewed before it's called done.
+
+## 6. Report
 
 Structure the final report as:
 
@@ -236,11 +251,15 @@ Structure the final report as:
 - **Memory considerations** — same, from the Memory & Performance Review.
 - **Security considerations** — same, from the Security Review; label
   each item checked vs. still needing verification.
-- **Remaining risks** — anything not fully verified (e.g. "leak-free by
-  code inspection; recommend an Instruments Allocations pass before
-  shipping if this screen is high-traffic").
+- **Independent review** — what `ios-evidence-reviewer` found, and
+  what was corrected as a result, or "no overclaims found."
+- **Remaining risks** — anything not fully verified (e.g. "no obvious
+  retain cycle found by static inspection; recommend an Instruments
+  Allocations pass before shipping if this screen is high-traffic").
 
 Then close with the `ios-evidence-reporting` skill's status block
 (`BUILD`, `TEST`, `AVAILABILITY`, `MEMORY`, `PERFORMANCE`, `SECURITY`,
-`DIFF`) as a compact summary — every line in it must trace back to
-something already stated in the sections above, not a new claim.
+`DIFF`) as a compact summary, each line tiered per that skill's
+taxonomy — every line must trace back to something already stated in
+the sections above, not a new claim, and must reflect any downgrade
+`ios-evidence-reviewer` made in step 5.

@@ -22,7 +22,12 @@ Two rules govern everything below:
    measurement contradicts it — don't go looking for a reason the
    measurement must be wrong instead.
 
-## 1. Pin down the reproduction before measuring anything
+The full loop, in order: **REPRODUCE → BASELINE → MEASURE → CHANGE →
+BUILD → TEST → MEASURE AGAIN → COMPARE → REPORT.** Skipping straight
+from REPRODUCE to CHANGE is exactly what turns a real fix into an
+unfalsifiable "should be faster now."
+
+## REPRODUCE — pin down the reproduction before measuring anything
 
 A before/after comparison is only valid if the same action happened
 under the same conditions both times. Write these down first:
@@ -66,7 +71,7 @@ Never run `xcrun simctl shutdown all`, `erase all`, or
 destroy a simulator another session or another person on the same
 Mac is actively using. Target a specific UDID instead.
 
-## 2. Choose the one thing to measure, and say why
+## BASELINE — choose the one thing to measure, and say why
 
 Trying to measure everything at once measures nothing usefully. Pick
 the layer most likely to explain the complaint, and state the
@@ -88,7 +93,7 @@ on-device trace and compare their totals, not just their counts — a
 2:1 count ratio can hide an 8:1 duration ratio, and duration is what
 tells you which layer to actually fix.
 
-## 3. Prefer a path that needs no code before writing any
+## BASELINE — prefer a path that needs no code before writing any
 
 Check this table before adding a single line of instrumentation code —
 several common questions are answerable with zero app changes:
@@ -106,7 +111,7 @@ decode runs on, or a count of objects created in a specific hot path.
 Code you add for measurement has to be removed later — every line
 you avoid adding is a line you don't have to remember to remove.
 
-## 4. If you do add instrumentation, keep it removable
+## BASELINE — if you do add instrumentation, keep it removable
 
 - **Never let it survive into a release build.** Wrap it so the string
   work itself doesn't happen outside debug builds:
@@ -142,7 +147,15 @@ enum Measure {
 - **Keep every measurement hook in one file.** Scattered across ten
   files, some are guaranteed to survive the cleanup pass.
 
-## 5. Record progress in a file the repo will never track
+## MEASURE — take the first number now
+
+With the reproduction locked down and instrumentation (if any) in
+place, take the actual measurement before touching the suspected fix.
+This number is the baseline everything else compares against — a
+number taken after the change starts is not a baseline, it's just
+another after-number with nothing to compare to.
+
+## Record progress in a file the repo will never track
 
 A measure → fix → re-measure loop rarely finishes in one pass. Put the
 running record somewhere git-ignored, and verify it's actually ignored
@@ -180,7 +193,35 @@ Device / config / data scale / action sequence / cache state
 - [ ] Instrumentation removed (verified via `strings`)
 ```
 
-## 6. Re-measure with the identical reproduction, side by side
+## CHANGE — apply the fix
+
+Make the smallest change that addresses the actual cause the
+measurement pointed to, not the original guess if the measurement
+already ruled it out. Never mix a structural refactor into the same
+change as a measured performance fix — if a regression shows up later,
+mixing them makes it impossible to tell which one caused it.
+
+## BUILD — rebuild
+
+The project has to actually compile with the change in place before
+there's anything to re-measure. This is `BUILD_VERIFIED` evidence, not
+a strong claim on its own, but a precondition for everything after it.
+
+## TEST — run the existing test suite
+
+Confirm the change didn't break anything the suite already covers
+before spending time on a re-measurement that a regression would make
+moot. `TEST_VERIFIED`, not a substitute for the performance measurement
+itself.
+
+## MEASURE AGAIN — re-measure with the identical reproduction
+
+Run the exact same reproduction steps from REPRODUCE — same device,
+same build configuration, same data scale, same action sequence, same
+cache state. A different reproduction produces an incomparable number,
+not a valid "after."
+
+## COMPARE — before and after, side by side
 
 ```
                        Before   After
@@ -192,9 +233,11 @@ Main-thread time/tap     31ms     7ms
 Timing numbers drift run to run — take the median of three runs and
 discard the first (cold caches and first-launch costs distort it).
 Count numbers (requests, allocations) don't drift the same way; one
-clean run is enough for those.
+clean run is enough for those. This before/after pair is what actually
+earns `RUNTIME_MEASURED` — a single after-number with no locked-down
+before is not a comparison.
 
-## 7. Confirm the instrumentation is actually gone
+## Confirm the instrumentation is actually gone
 
 ```sh
 # Should print 0 — no measurement strings survived into the release binary
@@ -214,11 +257,7 @@ If the cause turns out to live in a different layer than expected:
 | Nothing guards this path from regressing again | `ios-unit-test-engineer` |
 | The suspected cause is a retain cycle or unbounded cache, not raw speed | `knowledge/memory-performance.md` (same agent, different section) |
 
-Never mix a structural change into the same commit as a measured
-performance fix — if a regression shows up later, mixing them makes it
-impossible to tell which change caused it.
-
-## Reporting
+## REPORT
 
 ```
 ## Reproduction
@@ -237,9 +276,11 @@ impossible to tell which change caused it.
 [anything skipped, stated as skipped — never implied as verified]
 ```
 
-Close with the `ios-evidence-reporting` skill's status block, and grade
-every line: a number from an actual run is `(executed)`; a cause you
-haven't run anything to confirm yet is `(static)` at best, or `⚠` if
-you haven't checked it at all. Never write a percentage without the
-raw before/after numbers next to it — "219 → 12" can be checked; "94%
-faster" on its own cannot.
+Close with the `ios-evidence-reporting` skill's status block, and
+tier every line per its taxonomy: a number from an actual before/after
+run is `RUNTIME_MEASURED`; a cause identified but not yet re-measured
+after the fix is `STATIC_ANALYSIS` at best; a plain guess not yet
+checked at all is `ASSUMPTION`, and say so as one — never dress a guess
+up as a finding. Never write a percentage without the raw before/after
+numbers next to it — "219 → 12" can be checked; "94% faster" on its own
+cannot.

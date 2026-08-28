@@ -4,8 +4,9 @@
 # files. These are the same checks that got written out by hand, over and
 # over, throughout this repo's development -- name-matches-filename,
 # description has a real trigger phrase, a read-only claim doesn't sit
-# next to a Write/Edit grant, code fences close. Scripting them once beats
-# re-deriving them by hand on every future change.
+# next to a Write/Edit grant, code fences close, evidence-grading
+# terminology hasn't drifted from the current taxonomy. Scripting them
+# once beats re-deriving them by hand on every future change.
 #
 # Usage: scripts/audit-agents.sh [repo-root]
 #
@@ -140,6 +141,42 @@ check_cross_references() {
     [ "$missing" -eq 0 ] && ok "every \`ios-*\` reference resolves to a real agent or skill"
 }
 
+check_evidence_terminology() {
+    section "evidence terminology"
+
+    # The repo migrated from a two-grade (static)/(executed) system to
+    # the seven-tier ASSUMPTION/STATIC_ANALYSIS/BUILD_VERIFIED/
+    # TEST_VERIFIED/RUNTIME_VERIFIED/RUNTIME_MEASURED/HUMAN_VERIFICATION
+    # taxonomy defined in ios-evidence-reporting. A leftover old-style
+    # tag means some file didn't get migrated with the rest.
+    local stale
+    stale=$(grep -rlE '\((static|executed)\)' "$AGENTS_DIR" "$SKILLS_DIR" 2>/dev/null)
+    if [ -n "$stale" ]; then
+        while IFS= read -r f; do
+            bad "stale (static)/(executed) grading found in $f -- migrate to the seven-tier taxonomy"
+        done <<< "$stale"
+    else
+        ok "no stale (static)/(executed) tags remain in agents or skills"
+    fi
+
+    # The taxonomy itself should still define all seven tiers -- a partial
+    # edit to ios-evidence-reporting would silently narrow what every
+    # other file can cite.
+    local taxonomy_file="$SKILLS_DIR/ios-evidence-reporting/SKILL.md"
+    if [ -f "$taxonomy_file" ]; then
+        local tier missing_tier=0
+        for tier in ASSUMPTION STATIC_ANALYSIS BUILD_VERIFIED TEST_VERIFIED RUNTIME_VERIFIED RUNTIME_MEASURED HUMAN_VERIFICATION; do
+            if ! grep -q "$tier" "$taxonomy_file"; then
+                bad "taxonomy file is missing tier $tier"
+                missing_tier=1
+            fi
+        done
+        [ "$missing_tier" -eq 0 ] && ok "all seven evidence tiers defined in ios-evidence-reporting"
+    else
+        warn "ios-evidence-reporting/SKILL.md not found -- cannot verify the taxonomy is intact"
+    fi
+}
+
 agent_files=()
 while IFS= read -r f; do agent_files+=("$f"); done < <(find "$AGENTS_DIR" -name '*.md' 2>/dev/null | sort)
 for f in "${agent_files[@]}"; do check_agent "$f"; done
@@ -149,6 +186,7 @@ while IFS= read -r f; do skill_files+=("$f"); done < <(find "$SKILLS_DIR" -name 
 for f in "${skill_files[@]}"; do check_skill "$f"; done
 
 check_cross_references
+check_evidence_terminology
 
 section "summary"
 if [ "$issues" -eq 0 ]; then
