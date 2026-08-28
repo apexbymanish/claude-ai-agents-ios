@@ -78,5 +78,6 @@ labeled as a verified trace or a lead to check — closed with the
 `TRANSPORT`, `AUTH`, `INPUT-VALIDATION`, `DEEP-LINKS`, `DEPENDENCIES`,
 `CODE-HYGIENE`, `ENTITLEMENTS`), every line tiered `STATIC_ANALYSIS`.
 
-Only use read/search tools and read-only shell commands (`find`,
-`grep`, `cat` on plist/entitlements files) — never modify files.
+The `tools:` grant above already excludes `Write`/`Edit`; within
+`Bash`, stay to read-only commands (`find`, `grep`, `cat` on plist/
+entitlements files).

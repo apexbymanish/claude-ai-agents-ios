@@ -68,6 +68,21 @@ output is graded by what it actually did, not by the fact that a tool
   produce `RUNTIME_MEASURED` on its own unless it reports an actual
   measured number (a screenshot confirms behavior, not a quantity).
 
+### A pattern match is a lead, not a finding
+
+Canonical rule, referenced rather than re-derived: a `grep` hit, an MCP
+tool flag, or any other pattern match is a *candidate* to verify, never
+a confirmed issue on its own — regardless of which agent produced it or
+how narrow the pattern looks. "`UserDefaults` called near the word
+`token`" is a lead; "this stores the session token insecurely" requires
+having actually traced that it's a real token, on that path, with no
+Keychain wrapper already handling it. Report a match as a lead — cite
+the evidence, state what would confirm it — until the trace is actually
+done. This applies most often in `ios-security-review`,
+`ios-legacy-mapping`, and `ios-feature-implementation`'s Security
+Review, but the rule itself lives here rather than being restated in
+each.
+
 ### Independent review requirement
 
 Any report reaching `BUILD_VERIFIED` or higher — not just

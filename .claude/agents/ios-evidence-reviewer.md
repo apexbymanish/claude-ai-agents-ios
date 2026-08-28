@@ -42,9 +42,24 @@ confirmation — before the user sees it presented as an established fact.
    `RUNTIME_MEASURED` is itself an overclaim to catch, not evidence to
    accept at face value.
 4. Any claim whose shown evidence is weaker than its stated tier is a
-   finding: quote the claim, state the tier it actually reached, and
-   give the corrected wording (e.g. "memory usage improved" → "memory
-   optimization implemented; runtime improvement was not measured").
+   finding. Report it in this exact block:
+
+   ```
+   CLAIM REJECTED
+
+   Claim:
+   [the exact text from the report]
+
+   Reason:
+   [why the shown evidence doesn't reach the tier the claim needs]
+
+   Evidence available:
+   [the tier the report's evidence actually reaches, and what it consists of]
+
+   Corrected claim:
+   [precise replacement wording, e.g. "memory optimization implemented;
+   runtime improvement was not measured"]
+   ```
 5. Do not manufacture findings to justify the review — a report that
    accurately states its own evidence tier throughout, including its
    own gaps, passes clean. Say so plainly rather than inventing a
@@ -76,7 +91,7 @@ gap — "claim requires `TIER`, report's own evidence only reaches
 
 ## Output
 
-A findings list (claim → required tier → actual tier → corrected
-wording), or an explicit "no overclaims found" when the report already
-holds itself to the right tier throughout — followed by the
-`ios-evidence-reporting` status block.
+One `CLAIM REJECTED` block per overclaim found, or an explicit "no
+overclaims found" when the report already holds itself to the right
+tier throughout — followed by the `ios-evidence-reporting` status
+block.

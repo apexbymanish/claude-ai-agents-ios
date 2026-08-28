@@ -5,10 +5,10 @@ description: Comprehensive security audit procedure for iOS/Swift code covering 
 
 # iOS Security Review
 
-A grep hit or pattern match below is a **lead to verify, not a confirmed
-vulnerability** — report every finding as something to check, with the
-evidence that raised it, not as a proven exploit. This procedure is
-read-only reconnaissance; it produces findings, not fixes.
+Per `ios-evidence-reporting`'s "a pattern match is a lead, not a
+finding" rule, every hit below is something to check, not a proven
+exploit. This procedure is read-only reconnaissance; it produces
+findings, not fixes.
 
 ## 1. Data storage & privacy
 
@@ -33,6 +33,12 @@ Check for:
   snapshot (no handling of `UIApplication.willResignActiveNotification`
   to blank the screen before backgrounding).
 
+**Known false positives:** a `UserDefaults` key whose name coincidentally
+contains "token"/"password" but stores a non-sensitive flag (e.g.
+`hasSeenTokenOnboarding`, `passwordFieldFocused` as UI state) rather
+than a credential value — read what's actually assigned, not just the
+key name, before flagging it.
+
 ## 2. Transport security
 
 ```bash
@@ -54,6 +60,17 @@ Check for:
 - Sensitive data (tokens, PII) placed in a URL query string instead of
   a header or POST body — query strings end up in server logs, proxy
   logs, and browser/webview history.
+
+**Known false positives:** `NSAllowsArbitraryLoads` set to `false` at
+the top level with a scoped `NSExceptionDomains` entry for one known
+test/staging host is a justified, narrow exception, not a blanket
+weakening — read the surrounding plist keys, not just whether the
+string appears. A `.useCredential` response inside `didReceive
+challenge` for `NSURLAuthenticationMethodClientCertificate` (presenting
+a client certificate for mutual TLS) is not the same finding as
+`.useCredential` for `NSURLAuthenticationMethodServerTrust` (bypassing
+server validation) — check which authentication method the challenge
+handler is actually branching on before treating it as a TLS bypass.
 
 ## 3. Authentication & session management
 
@@ -138,6 +155,14 @@ Check for:
   config or a server-side proxy.
 - Debug logging left in that would print request/response bodies,
   tokens, or PII — check whether it's gated out of release builds.
+
+**Known false positives:** a match inside a `Tests`/`UITests` target
+using an obviously fake value (`"test-api-key-123"`, `"fake-token"`) is
+a test fixture, not a production secret — check the target membership
+before flagging. An `enum` case declaration (`case token`, `case
+secret`) is a type discriminator with no associated value, not an
+assigned credential; only a `= "..."` assignment is a hit worth
+reporting.
 
 Jailbreak/tamper detection is a judgment call, not a default
 recommendation: proportionate for an app handling high-value secrets

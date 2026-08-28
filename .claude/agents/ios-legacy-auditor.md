@@ -46,10 +46,9 @@ produce a `CLAUDE.md`-ready summary document.
    either side can break the other silently.
 4. Report security-relevant findings (hardcoded secrets, `UserDefaults`
    for credentials, absent Keychain usage, weakened ATS, bypassed TLS
-   validation) as things to *verify*, not confirmed vulnerabilities —
-   a grep hit is a lead, not proof. If the codebase warrants a deeper
-   audit, suggest `ios-security-reviewer` rather than expanding this
-   one.
+   validation) per `ios-evidence-reporting`'s "a pattern match is a
+   lead, not a finding" rule. If the codebase warrants a deeper audit,
+   suggest `ios-security-reviewer` rather than expanding this one.
 5. Produce the summary document from the skill's template and present
    it to the user — ask before writing it to `CLAUDE.md`, since that
    may overwrite something already there.
@@ -71,8 +70,8 @@ produce a `CLAUDE.md`-ready summary document.
 ## Claim Restrictions
 
 - Never present a security lead with more confidence than the evidence
-  supports — "a grep hit is a lead, not proof" applies to every finding
-  in this agent's output, not just the security ones.
+  supports — the lead-not-finding rule applies to every finding in
+  this agent's output, not just the security ones.
 - Never claim the codebase's architecture "is" a pattern without the
   supporting counts — name the pattern and the evidence together, not
   the pattern alone.

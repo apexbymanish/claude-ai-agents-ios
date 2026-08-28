@@ -43,6 +43,20 @@ A file count over ~400-500 lines for view controllers, high singleton
 density, and low ViewModel presence together indicate a Massive View
 Controller / MVC-in-name-only codebase regardless of what any doc claims.
 
+**Known false positives:** a large view-controller file that's mostly
+generated or boilerplate (Interface Builder outlet dumps, generated
+model/mapping code) isn't the same finding as a large hand-maintained
+one — open the file rather than trusting the line count alone. Raw
+`.shared` count includes standard Apple singletons (`UIApplication.shared`,
+`URLSession.shared`, `FileManager.default`) that are normal API usage,
+not an app-specific anti-pattern — the density signal is about
+*app-defined* singletons; skim a sample of hits to see which kind
+dominates before citing the raw count as evidence of over-reliance.
+Delegate-density hits include standard UIKit protocol conformance
+(`UITableViewDelegate`, `UICollectionViewDelegate`) alongside any
+custom delegate protocols substituting for real architecture — only
+the latter is the smell.
+
 ## 3. Flag Objective-C ↔ Swift bridging points
 
 ```bash
@@ -78,10 +92,18 @@ grep -rn "didReceive challenge" --include="*.swift" . -A5 | grep -i "useCredenti
 grep -rniE '(print|NSLog|os_log)\(.*\b(token|password|secret)\b' --include="*.swift" .
 ```
 
-A hit on any of these is not proof of a vulnerability by itself — report
-it as a finding to verify, not a confirmed issue. But the absence of any
-Keychain usage combined with `UserDefaults` calls near "token" or
-"password" is a strong signal credentials aren't stored securely.
+Per `ios-evidence-reporting`'s "a pattern match is a lead, not a
+finding" rule, a hit on any of these is a lead to verify, not proof.
+The absence of any Keychain usage combined with `UserDefaults` calls
+near "token" or "password" is a strong signal worth verifying, even
+though neither half alone confirms insecure storage.
+
+**Known false positive:** zero hits on raw `kSecClass`/`SecItemAdd`
+doesn't mean zero Keychain usage — a project using a third-party
+Keychain wrapper (e.g. KeychainAccess, KeychainSwift) calls the
+wrapper's API, not the raw Security framework calls this grep looks
+for. Check `Package.resolved`/`Podfile.lock` for a Keychain-wrapper
+dependency before concluding credentials aren't in the Keychain at all.
 
 ## 5. Map module and dependency boundaries
 

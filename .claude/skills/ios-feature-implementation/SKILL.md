@@ -177,9 +177,9 @@ for how to describe that investigation).
 
 For any feature touching authentication, credentials/tokens, personal
 data, networking, deep links, or a WebView, check all of the following.
-A grep hit or a pattern match below is a *lead to verify*, not a
-confirmed vulnerability — report it as something to check, not as a
-finding, unless you've actually traced the data flow and confirmed it.
+Per `ios-evidence-reporting`'s "a pattern match is a lead, not a
+finding" rule, report a hit as something to check, not a confirmed
+vulnerability, unless the data flow was actually traced.
 
 1. **Secure storage**
    - Credentials, tokens, and other secrets live in the Keychain, not

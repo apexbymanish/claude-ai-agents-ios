@@ -75,5 +75,6 @@ block (e.g. `PRIVACY-MANIFEST`, `EXPORT-COMPLIANCE`, `PERMISSIONS`,
 `ATT`, `SIGN-IN-PARITY`), every line tiered `STATIC_ANALYSIS` or
 `HUMAN_VERIFICATION` for what's outside code visibility.
 
-Only use read/search tools and read-only shell commands (`find`,
-`grep`, `cat` on plist/entitlements files) — never modify files.
+The `tools:` grant above already excludes `Write`/`Edit`; within
+`Bash`, stay to read-only commands (`find`, `grep`, `cat` on plist/
+entitlements files).
