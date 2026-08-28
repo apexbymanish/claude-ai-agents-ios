@@ -31,7 +31,8 @@ switching required.
 | `ios-security-review` | `ios-security-reviewer` | 8-area audit: storage/privacy → transport → authN/session → input validation → deep links → third-party SDKs → code hygiene → entitlements |
 | `ios-app-store-readiness` | `ios-app-store-reviewer` | Pre-submission audit: privacy manifest → export compliance → permission descriptions → App Tracking Transparency → Sign in with Apple parity → unused entitlements → rejection triggers |
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
-| `ios-evidence-reporting` | All 8 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed) so no agent claims something works, passes, or is safe without evidence already shown in its report |
+| `ios-performance-measurement` | `ios-memory-performance-engineer` | Reproduce → choose what to measure → measure before changing anything → change → re-measure with the same conditions → verify instrumentation removed |
+| `ios-evidence-reporting` | All 8 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed, each `✓` graded `(static)` or `(executed)`) so no agent claims something works, passes, or is safe without evidence already shown in its report |
 
 ### Knowledge library (`knowledge/`)
 
@@ -109,6 +110,7 @@ graph TD
     UITEST --> TESTSKILL
 
     MEM --> KMEM[["knowledge/memory-performance.md"]]
+    MEM --> MEASURE(["ios-performance-measurement (skill)"])
     UX --> KUX[["knowledge/design-philosophy.md"]]
     LEGACY --> LEGSKILL(["ios-legacy-mapping (skill)"])
     SEC --> SECSKILL(["ios-security-review (skill)"])
@@ -123,6 +125,7 @@ graph TD
     SEC --> EVID
     STORE --> EVID
     FEAT --> EVID
+    MEASURE --> EVID
 
     EVID(["ios-evidence-reporting (skill)<br/>every report closes with this status block"])
 ```
@@ -176,7 +179,15 @@ task shows `BUILD`/`TEST`/`DIFF` lines backed by real command output; a
 read-only review shows `ACCESSIBILITY`/`ARCHITECTURE`/`SECURITY` lines
 backed by file:line citations and counts. Anything not actually checked
 is marked `⚠` and explained — never silently dropped, never asserted
-as if it were verified.
+as if it were verified. Every `✓` also carries a grade — `(static)` for
+"confirmed by reading the code" or `(executed)` for "confirmed by
+actually running something" — since those are different strengths of
+evidence and collapsing them loses the difference. `ios-memory-
+performance-engineer` uses `ios-performance-measurement` to earn an
+`(executed)` grade on a performance claim: lock the reproduction steps,
+measure before changing anything, change, then measure again with the
+same conditions, rather than asserting "this should be faster" from
+reading the code alone.
 
 ## Design philosophy
 
