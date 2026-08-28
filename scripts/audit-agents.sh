@@ -117,13 +117,18 @@ check_cross_references() {
     section "cross-file references"
     local all_names mentioned missing=0
 
-    all_names=$( { ls "$AGENTS_DIR" 2>/dev/null | sed 's/\.md$//'; ls "$SKILLS_DIR" 2>/dev/null; } | sort -u)
+    # Third-party MCP server names this repo documents integrating with
+    # (see .mcp.json and README) -- not agents or skills defined here, so
+    # they'd otherwise read as dangling references.
+    local external_names=$'ios-agent\nios-simulator\nios-simulator-mcp'
+
+    all_names=$( { ls "$AGENTS_DIR" 2>/dev/null | sed 's/\.md$//'; ls "$SKILLS_DIR" 2>/dev/null; printf '%s\n' "$external_names"; } | sort -u)
     mentioned=$(grep -rhoE '`ios-[a-z-]+`' "$AGENTS_DIR" "$SKILLS_DIR" 2>/dev/null | tr -d '`' | sort -u)
 
     # Every backtick `ios-...` mention across every agent/skill file should
-    # resolve to a real agent or skill in this repo. A renamed or typo'd
-    # reference is otherwise invisible until someone follows it and finds
-    # nothing there.
+    # resolve to a real agent or skill in this repo (or a known external
+    # tool above). A renamed or typo'd reference is otherwise invisible
+    # until someone follows it and finds nothing there.
     while IFS= read -r ref; do
         [ -z "$ref" ] && continue
         if ! printf '%s\n' "$all_names" | grep -qx "$ref"; then

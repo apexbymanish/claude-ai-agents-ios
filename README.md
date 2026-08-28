@@ -13,14 +13,19 @@ switching required.
 
 | Agent | Invoked when you... | Tools |
 |---|---|---|
-| `ios-architect` | start a new feature/module, ask "how should I structure this", plan a refactor, choose MVVM/Clean/VIPER, decide on DI or SwiftData vs. Core Data | Read, Grep, Glob, Write, Edit, Skill |
-| `ios-unit-test-engineer` | ask for tests, test coverage, TDD, or to make code testable | Read, Grep, Glob, Write, Edit, Bash, Skill |
-| `ios-ui-test-engineer` | ask for UI tests, debug a flaky UI test, or set up snapshot testing | Read, Grep, Glob, Write, Edit, Bash, Skill |
-| `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | Read, Grep, Glob, Bash, Edit, Skill |
-| `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob, Skill (read-only) |
-| `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill (read-only) |
-| `ios-security-reviewer` | ask for a security review, "is this secure", vulnerability check, or auth/session audit | Read, Grep, Glob, Bash, Skill (read-only) |
-| `ios-app-store-reviewer` | ask "is this ready to submit", "will this get rejected", or to check App Store compliance | Read, Grep, Glob, Bash, Skill (read-only) |
+| `ios-architect` | start a new feature/module, ask "how should I structure this", plan a refactor, choose MVVM/Clean/VIPER, decide on DI or SwiftData vs. Core Data | Read, Grep, Glob, Write, Edit, Skill, `ios-agent`* |
+| `ios-unit-test-engineer` | ask for tests, test coverage, TDD, or to make code testable | Read, Grep, Glob, Write, Edit, Bash, Skill, `ios-agent`* |
+| `ios-ui-test-engineer` | ask for UI tests, debug a flaky UI test, or set up snapshot testing | Read, Grep, Glob, Write, Edit, Bash, Skill, `ios-agent`*, `ios-simulator`* |
+| `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | Read, Grep, Glob, Bash, Edit, Skill, `ios-agent`*, `ios-simulator`* |
+| `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob, Skill, `ios-agent`* (read-only) |
+| `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
+| `ios-security-reviewer` | ask for a security review, "is this secure", vulnerability check, or auth/session audit | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
+| `ios-app-store-reviewer` | ask "is this ready to submit", "will this get rejected", or to check App Store compliance | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
+
+\* `ios-agent` and `ios-simulator` are optional third-party MCP servers — see
+[Optional tooling](#optional-tooling-static-analysis--simulator-control) below.
+Every agent works standalone without them; when configured, their findings
+strengthen a report from `(static)` to `(executed)` grade.
 
 ### Skills (`.claude/skills/`)
 
@@ -84,9 +89,72 @@ personal and project-level agents/skills automatically. Note that
 you'd still need `knowledge/` present at each project's root (symlinking
 it in per-project is simplest).
 
-Nothing else to configure — Claude Code reads each agent's `description`
+Nothing else is required — Claude Code reads each agent's `description`
 frontmatter and invokes the right one automatically based on your
-request.
+request. See [Optional tooling](#optional-tooling-static-analysis--simulator-control)
+below for two third-party MCP servers that strengthen several agents'
+findings from `(static)` to `(executed)` grade, without which everything
+above still works on its own.
+
+## Optional tooling: static analysis & simulator control
+
+Two servers from [`ios-agent-skill`](https://github.com/Nagarjuna2997/ios-agent-skill)
+(MIT-licensed, not affiliated with this repo) give several agents above
+a way to *run* a check instead of only reading code for it. Neither is
+required — every agent already works without them, falling back to
+`(static)` reads and manually-described procedures.
+
+### `ios-agent-mcp` — static analysis (published, recommended)
+
+Ten read-only tools that scan a Swift project and return structured
+findings (file, line, consequence, fix) for concurrency, architecture,
+SwiftUI patterns, availability guards, App Store readiness, memory,
+security, testing, and performance — see the [tool list](https://github.com/Nagarjuna2997/ios-agent-skill/tree/main/mcp-server)
+for specifics. It's filesystem-read-only with no network access.
+
+This repo's `.mcp.json` already declares it, so copying `.mcp.json`
+into your project alongside `.claude/` is the only step:
+
+```bash
+cp .mcp.json /path/to/your-ios-project/.mcp.json
+```
+
+Claude Code will offer to enable the project-scoped server the first
+time it's relevant; `npx` fetches the package on first use, no global
+install needed.
+
+### `ios-simulator-mcp` — simulator control (early, source-only)
+
+Build, test, install, launch, deep-link, and screenshot tools for a
+booted iOS Simulator — the runtime counterpart to the static analyzer
+above. As of this writing it's **v0.1.0, not yet published to npm, and
+early** (its own docs call it "the first safe slice"), so treat it as
+something to try, not something to depend on:
+
+```bash
+git clone https://github.com/Nagarjuna2997/ios-agent-skill.git
+cd ios-agent-skill/ios-simulator-mcp
+npm install && npm run build
+```
+
+Then add it to your project's `.mcp.json` (or personal MCP config)
+under the server name `ios-simulator`, pointing at the built path:
+
+```jsonc
+{
+  "mcpServers": {
+    "ios-simulator": {
+      "command": "node",
+      "args": ["/absolute/path/to/ios-agent-skill/ios-simulator-mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+Requires macOS and Xcode command-line tools. If you name the server
+something other than `ios-simulator`, update the `mcp__ios-simulator__*`
+tool grant in `ios-ui-test-engineer.md` and
+`ios-memory-performance-engineer.md` to match.
 
 ## How it fits together
 

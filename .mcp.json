@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ios-agent": {
+      "command": "npx",
+      "args": ["-y", "ios-agent-mcp"]
+    }
+  }
+}

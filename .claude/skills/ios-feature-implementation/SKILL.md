@@ -95,10 +95,18 @@ call before proposing an approach.
 Run and report on each of the following — don't skip one because it
 seems obviously fine:
 
-1. **Build** — the project actually compiles.
-2. **Tests** — run the relevant test target(s), report pass/fail counts.
+1. **Build** — the project actually compiles. If the `ios-simulator`
+   MCP server is configured (see this repo's `.mcp.json` and README),
+   `build_project` gives a structured result instead of parsing raw
+   `xcodebuild` output; otherwise run `xcodebuild` directly.
+2. **Tests** — run the relevant test target(s), report pass/fail counts
+   (`run_tests` via `ios-simulator-mcp`, or `xcodebuild test` directly).
 3. **API availability** — every API used is available at the stated
-   minimum iOS version, or is properly `#available`-guarded.
+   minimum iOS version, or is properly `#available`-guarded. If the
+   `ios-agent` MCP server is configured, `mcp__ios-agent__check_availability_guards`
+   also catches the less obvious mistake: a guard set to a *higher* iOS
+   version than the API actually requires, which silently drops support
+   for every device between the true minimum and the guard's version.
 4. **Retain cycles** — see the Memory & Performance Review below.
 5. **Concurrency** — new `async`/actor-isolated code doesn't introduce a
    data race or an accidental main-thread block; existing concurrency

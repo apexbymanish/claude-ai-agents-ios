@@ -12,6 +12,35 @@
 - **Package Manager:** [Swift Package Manager / CocoaPods / Carthage / mixed]
 - **Test Frameworks:** [XCTest / Swift Testing / both]
 
+## Constraints
+
+[State the rules that apply specifically to THIS project, not general
+iOS best practice — every agent above already knows the general rules.
+This section is for where your project's reality overrides a generic
+recommendation. Below is a filled-in example for a project with an
+older minimum deployment target and an existing mixed codebase;
+replace it with your own, or delete constraints that don't apply.]
+
+**Example** (delete and replace with your actual constraints):
+
+- Minimum deployment target: iOS 14. Do not suggest or use an API that
+  requires a later version without an explicit `#available` guard.
+- This is an existing UIKit + SwiftUI codebase. Do not propose
+  replacing existing UIKit screens with SwiftUI unless the request
+  explicitly asks for that migration.
+- Persistence already uses [Core Data / Realm / a custom store] — do
+  not introduce SwiftData alongside it without an explicit request to
+  migrate.
+- This project uses RxSwift for [area] — match that pattern in related
+  code rather than introducing Combine or async/await side by side in
+  the same flow.
+- Existing WebView, PDF, and image-handling code follows established
+  patterns in [location] — reuse them rather than writing new
+  equivalents. See `knowledge/memory-performance.md` for the
+  lifecycle/memory rules these already need to follow.
+- Prefer an existing in-repo abstraction over adding a new dependency,
+  even when a library would be more convenient for one call site.
+
 ## Legacy / Mixed-Language Notes
 
 [If this project has Objective-C or older UIKit code, note it here so
