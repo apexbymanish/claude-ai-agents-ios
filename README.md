@@ -24,8 +24,8 @@ based on what you ask, no manual switching required.
 | Skill | Backs | Purpose |
 |---|---|---|
 | `ios-testing-strategy` | `ios-unit-test-engineer`, `ios-ui-test-engineer` | Concrete seams → test-double → red/green procedure |
-| `ios-legacy-mapping` | `ios-legacy-auditor` | Concrete inventory → detect-architecture → bridging-risk → summary-doc procedure |
-| `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code + business logic → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance) → report |
+| `ios-legacy-mapping` | `ios-legacy-auditor` | Concrete inventory → detect-architecture → bridging-risk → security-signal → summary-doc procedure |
+| `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
 
 ### Template
 

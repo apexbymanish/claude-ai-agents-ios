@@ -56,7 +56,34 @@ exposed to Swift — these are the highest-risk edit points (changes on
 either side can silently break the other without a compiler error on
 both sides in mixed-language files).
 
-## 4. Map module and dependency boundaries
+## 4. Flag security-relevant patterns
+
+```bash
+# Hardcoded secrets/keys in source
+grep -rniE '(api[_-]?key|secret|password|token)\s*=\s*"' --include="*.swift" --include="*.m" --include="*.h" .
+
+# Credentials/tokens stored insecurely (UserDefaults instead of Keychain)
+grep -rniE 'UserDefaults' --include="*.swift" . | grep -iE 'token|password|secret|credential'
+
+# Is there a Keychain wrapper at all?
+grep -rl "kSecClass\|SecItemAdd\|SecItemCopyMatching" --include="*.swift" . | wc -l
+
+# App Transport Security weakened
+grep -A5 "NSAppTransportSecurity" **/*.plist 2>/dev/null
+
+# TLS/certificate validation bypassed
+grep -rn "didReceive challenge" --include="*.swift" . -A5 | grep -i "useCredential\|performDefaultHandling"
+
+# Sensitive data reaching logs
+grep -rniE '(print|NSLog|os_log)\(.*\b(token|password|secret)\b' --include="*.swift" .
+```
+
+A hit on any of these is not proof of a vulnerability by itself — report
+it as a finding to verify, not a confirmed issue. But the absence of any
+Keychain usage combined with `UserDefaults` calls near "token" or
+"password" is a strong signal credentials aren't stored securely.
+
+## 5. Map module and dependency boundaries
 
 ```bash
 find . -name "Package.swift"
@@ -68,7 +95,7 @@ Note whether the app is a single monolithic target, uses local SPM
 packages, or uses CocoaPods/Carthage — this determines how safely code
 can be moved or extracted later.
 
-## 5. Produce the summary document
+## 6. Produce the summary document
 
 Write findings as a `CLAUDE.md`-ready summary with these sections:
 
@@ -82,6 +109,9 @@ Write findings as a `CLAUDE.md`-ready summary with these sections:
 - **Legacy Objective-C surface:** [bridging headers found, approximate
   `.m`/`.h` file count, riskiest bridging points]
 - **Module structure:** [monolith / SPM packages / CocoaPods, and which]
+- **Security signals:** [hits from step 4, each labeled "verify" not
+  "confirmed" — e.g. "no Keychain usage found; 3 UserDefaults calls
+  near 'token' in AuthManager.swift — recommend verifying token storage"]
 - **Suggested entry points for new work:** [the most decoupled, best-
   tested area to build on, if one exists]
 ```

@@ -44,6 +44,18 @@ Read, in this order, before writing a single line:
 4. **Nearby reusable components** — check for an existing view, view
    modifier, or helper before writing a new one; constraints usually say
    "reuse existing components" for a reason.
+5. **Existing API/networking behavior on this path** — the actual
+   current auth-header handling, retry/timeout policy, offline/error
+   handling, and response caching for the endpoint(s) involved. New code
+   that silently drops an existing retry or error-mapping behavior is a
+   regression even if the happy path works.
+6. **Existing security posture for this data path** — how any
+   credential, token, or sensitive field involved is stored and
+   transmitted today (Keychain vs. `UserDefaults`, TLS/ATS settings,
+   whether it's ever logged elsewhere). Carry the existing posture
+   forward; don't introduce a weaker one for convenience (e.g. caching a
+   token in `UserDefaults` because it's easier than reusing the existing
+   Keychain wrapper).
 
 Do not modify files during this step.
 
@@ -94,7 +106,8 @@ seems obviously fine:
 6. **Memory implications** — see the Memory & Performance Review below.
 7. **Performance implications** — no new unbounded main-thread work
    (image decode, JSON parsing, file I/O) introduced on a hot path.
-8. **Review the diff** — read your own changes once, end to end, before
+8. **Security** — see the Security Review below.
+9. **Review the diff** — read your own changes once, end to end, before
    reporting done; look for anything outside the files named in step 2.
 
 ## Memory & Performance Review
@@ -152,6 +165,54 @@ for how to describe that investigation).
      re-created
    - Notification observers registered per-cell/per-view without removal
 
+## Security Review
+
+For any feature touching authentication, credentials/tokens, personal
+data, networking, deep links, or a WebView, check all of the following.
+A grep hit or a pattern match below is a *lead to verify*, not a
+confirmed vulnerability — report it as something to check, not as a
+finding, unless you've actually traced the data flow and confirmed it.
+
+1. **Secure storage**
+   - Credentials, tokens, and other secrets live in the Keychain, not
+     `UserDefaults`, a plist, or unencrypted Core Data/SwiftData
+   - If this feature adds a new secret, it goes through the app's
+     existing Keychain wrapper rather than a new storage path
+
+2. **Transport security**
+   - No new `NSAllowsArbitraryLoads`/ATS exception introduced for this
+     feature's endpoint
+   - Requests actually go over TLS; if the app uses certificate or
+     public-key pinning, this feature's networking doesn't bypass it
+
+3. **Input validation at the API boundary**
+   - Deserialized JSON/response data is validated before use, not
+     trusted blindly (a malformed or unexpected response shouldn't crash
+     or corrupt state)
+   - No URL or query string built by concatenating unescaped user input
+   - Any WebView this feature adds or reuses doesn't load arbitrary or
+     user-supplied URLs without restriction
+
+4. **AuthN/authZ**
+   - The new code path doesn't bypass an existing authentication check
+   - A token or session isn't reused outside the scope it was issued for
+
+5. **Logging & crash reporting**
+   - No token, password, or personal data is written to logs, analytics
+     events, or crash-reporter breadcrumbs — check both new logging
+     calls this feature adds and any existing logging on the touched path
+
+6. **Third-party SDKs**
+   - This feature doesn't hand personal data or credentials to a
+     third-party SDK beyond what the app's existing data-sharing policy
+     already covers
+
+7. **Deep links / URL schemes**
+   - If this feature is reachable via a URL scheme or Universal Link,
+     the incoming URL and its parameters are validated before acting on
+     them — don't trust a deep link parameter the way you'd trust
+     internal app state
+
 ## 5. Report
 
 Structure the final report as:
@@ -162,6 +223,8 @@ Structure the final report as:
 - **Performance considerations** — what was checked from the list above
   and what was found.
 - **Memory considerations** — same, from the Memory & Performance Review.
+- **Security considerations** — same, from the Security Review; label
+  each item checked vs. still needing verification.
 - **Remaining risks** — anything not fully verified (e.g. "leak-free by
   code inspection; recommend an Instruments Allocations pass before
   shipping if this screen is high-traffic").

@@ -17,8 +17,10 @@ say so and hand off to `ios-architect` or the relevant specialist.
 Follow the `ios-legacy-mapping` skill exactly: inventory targets and
 schemes → detect the architecture actually in use via grep-based
 evidence (not the README's claims) → flag Objective-C/Swift bridging
-points and bridging-header health → map module/dependency boundaries
-→ produce a `CLAUDE.md`-ready summary document.
+points and bridging-header health → flag security-relevant patterns
+(hardcoded secrets, insecure credential storage, weakened transport
+security) → map module/dependency boundaries → produce a
+`CLAUDE.md`-ready summary document.
 
 ## When consulted
 
@@ -32,14 +34,19 @@ points and bridging-header health → map module/dependency boundaries
 3. Pay particular attention to Objective-C bridging headers: these are
    the highest-risk edit points in a mixed codebase, since a change on
    either side of the bridge can break the other silently.
-4. Produce the summary document from the skill's template and present
+4. Report security-relevant findings (hardcoded secrets, `UserDefaults`
+   used for credentials, absent Keychain usage, weakened ATS, bypassed
+   TLS validation) as things to *verify*, not confirmed vulnerabilities
+   — a grep hit is a lead, not proof. Never present a security finding
+   with more confidence than the evidence supports.
+5. Produce the summary document from the skill's template and present
    it to the user — ask before writing it to a `CLAUDE.md` file,
    since that may overwrite something already there.
-5. Explicitly name the safest entry point for new work if the evidence
+6. Explicitly name the safest entry point for new work if the evidence
    supports one (e.g. "the `Features/Search` module is isolated,
    has its own package boundary, and has test coverage — build here
    rather than in the shared `AppDelegate`-adjacent code").
-6. If the codebase turns out to be well-structured and documented
+7. If the codebase turns out to be well-structured and documented
    already, say so plainly rather than manufacturing findings to
    justify the audit.
 

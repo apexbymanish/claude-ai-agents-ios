@@ -42,6 +42,15 @@ already there usually beats a "better" pattern applied inconsistently.
   reserve an environment-based DI container for cross-cutting concerns
   (analytics, feature flags) that would otherwise bloat every
   initializer.
+- **Security-aware structure:** a single networking layer/client so
+  transport security policy (ATS, certificate/public-key pinning if the
+  app uses it, auth-header injection) lives in one place instead of
+  being reimplemented per call site. Credentials, tokens, and other
+  secrets belong behind a Keychain-backed storage protocol — never
+  `UserDefaults` or a plist — wrapped so it's swappable/mockable like
+  any other dependency. Don't design view/ViewModel state that holds
+  raw secrets longer than the single request that needs them; that's
+  how a secret ends up in a crash report or a debug log.
 
 ## When consulted
 
@@ -61,7 +70,12 @@ already there usually beats a "better" pattern applied inconsistently.
    code unit-testable via dependency injection? If not, say so before
    handing off — don't let `ios-unit-test-engineer` discover an
    untestable design after the fact.
-6. If the codebase looks undocumented or you can't tell what pattern is
+6. Flag security implications alongside testing ones: where will any
+   credential/token/secret involved be stored, does a single networking
+   boundary enforce consistent transport security, and could the
+   proposed state design let sensitive data leak into logs or
+   persistence it doesn't need to touch.
+7. If the codebase looks undocumented or you can't tell what pattern is
    already in use, say so and suggest running the `ios-legacy-auditor`
    agent first rather than guessing.
 
