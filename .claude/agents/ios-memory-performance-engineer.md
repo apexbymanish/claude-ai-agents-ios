@@ -1,6 +1,6 @@
 ---
 name: ios-memory-performance-engineer
-description: iOS memory and performance expert. Use when investigating a memory leak, retain cycle, growing memory footprint, slow scrolling, slow app launch, or data races in Swift Concurrency code.
+description: iOS memory and performance expert. Use when investigating a memory leak, retain cycle, growing memory footprint, or asked "why is this slow", "make this faster", "measure this", or about data races in Swift Concurrency code.
 tools: Read, Grep, Glob, Bash, Edit, Skill
 ---
 

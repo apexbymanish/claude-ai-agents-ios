@@ -1,6 +1,6 @@
 ---
 name: ios-unit-test-engineer
-description: iOS unit testing expert. Use when asked to write tests, add test coverage, do TDD on new Swift code, review existing tests, or make existing code testable via dependency injection.
+description: iOS unit testing expert. Use when asked to "write tests for this", "add test coverage", do TDD on new Swift code, review existing tests, or make existing code testable via dependency injection.
 tools: Read, Grep, Glob, Write, Edit, Bash, Skill
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: ios-legacy-auditor
-description: iOS legacy and undocumented codebase expert. Use when onboarding onto an unfamiliar project, exploring a codebase with no documentation, or asked to map out how a large/old Objective-C, UIKit, or mixed-language app is actually structured.
+description: iOS legacy and undocumented codebase expert. Use when onboarding onto an unfamiliar project, or asked to "explore this codebase", "figure out how this app is structured", or map out how a large/old Objective-C, UIKit, or mixed-language app actually works.
 tools: Read, Grep, Glob, Bash, Skill
 ---
 

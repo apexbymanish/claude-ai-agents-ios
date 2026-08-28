@@ -197,3 +197,17 @@ principles of good design, Don Norman's *The Design of Everyday Things*,
 Nielsen Norman Group's usability heuristics, and *Refactoring UI* for
 concrete visual judgment calls. See `knowledge/design-philosophy.md`
 for how each is applied to iOS specifically.
+
+## Maintaining this repo
+
+`scripts/audit-agents.sh` runs the mechanical checks every agent/skill
+file gets held to during development: frontmatter `name:` matches the
+filename or directory, `description:` carries a real quoted trigger
+phrase, a read-only claim in the body doesn't sit next to a `Write`/
+`Edit` grant, code fences close, and every backtick `ios-*` reference
+across the repo resolves to a real agent or skill. It's non-blocking —
+findings are for a human to act on, not a gate.
+
+```bash
+./scripts/audit-agents.sh
+```

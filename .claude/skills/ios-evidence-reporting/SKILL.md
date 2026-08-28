@@ -1,6 +1,6 @@
 ---
 name: ios-evidence-reporting
-description: Standard for reporting task outcomes with verifiable evidence instead of confident prose. Use whenever concluding any iOS agent task — implementation, testing, review, audit, or architecture consultation — before claiming something works, passes, is safe, or is well-structured.
+description: Standard for reporting task outcomes with verifiable evidence instead of confident prose. Use before writing "it works", "done", "this is safe", or "this is well-structured" at the end of any iOS agent task — implementation, testing, review, audit, or architecture consultation.
 ---
 
 # iOS Evidence-Based Reporting
