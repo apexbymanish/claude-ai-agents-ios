@@ -202,7 +202,11 @@ graph TD
     MEASURE --> EVID
 
     EVID(["ios-evidence-reporting (skill)<br/>every report is tiered against this taxonomy"])
-    EVID -. claim-bearing report .-> REVIEWER
+    EVID -. STATIC_ANALYSIS-only report, optional .-> REVIEWER
+    UNIT --> REVIEWER
+    UITEST --> REVIEWER
+    MEM --> REVIEWER
+    FEAT --> REVIEWER
     REVIEWER --> EVID
 ```
 
@@ -214,7 +218,12 @@ converges on the same evidence-reporting standard at the end.
 `ios-evidence-reviewer` is the one exception to "leaf": it reads
 *another* agent's finished report and downgrades any claim the shown
 evidence doesn't actually support, then the corrected report closes
-with the same status block format again.
+with the same status block format again. `ios-feature-implementation`,
+`ios-memory-performance-engineer`, `ios-unit-test-engineer`, and
+`ios-ui-test-engineer` route through it automatically whenever their
+own report reaches `BUILD_VERIFIED` or higher — the agent that ran the
+build/test/measurement isn't the only one who checks whether its
+report is honest about it.
 
 ## How they hand off to each other
 
@@ -250,10 +259,13 @@ A typical flow, though you never need to invoke any of this by name:
    separate concern from `ios-security-reviewer` even though they share
    some ground (entitlements, transport security), so run both before a
    release if either is relevant.
-8. **Report making a build/test/runtime/memory/performance/security
-   claim?** `ios-evidence-reviewer` checks it before it's called done —
-   `ios-feature-implementation` calls it automatically as its last
-   step; any other agent's report can be handed to it directly too.
+8. **Report reaching `BUILD_VERIFIED` or higher?** `ios-evidence-reviewer`
+   checks it before it's called done. `ios-feature-implementation`,
+   `ios-memory-performance-engineer`, `ios-unit-test-engineer`, and
+   `ios-ui-test-engineer` — the agents that can independently produce a
+   build/test/runtime/measured claim, not just a static finding — each
+   route through it automatically as their last step; any other agent's
+   report can be handed to it directly too.
 
 ## Evidence over assertion
 
@@ -277,8 +289,10 @@ number from actually running the app (Instruments, MetricKit,
 → measure → change → build → test → measure again → compare → report
 loop. A claim this repo's agents will never make without matching
 evidence: "fixed," "optimized," "faster," "leak-free," "thread-safe,"
-or "secure" — see `ios-evidence-reporting`'s claim → minimum-evidence
-matrix for the full list and the precise-language alternatives.
+"secure," or "production-ready" (a cross-cutting claim no single agent's
+evidence covers alone) — see `ios-evidence-reporting`'s claim →
+minimum-evidence matrix for the full list and the precise-language
+alternatives.
 
 Because the agent that implements something shouldn't be the only
 authority on whether its own report is honest, `ios-evidence-reviewer`
