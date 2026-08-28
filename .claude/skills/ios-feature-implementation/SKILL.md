@@ -1,0 +1,167 @@
+---
+name: ios-feature-implementation
+description: Structured procedure for implementing a new feature or change in an existing iOS codebase — inspect and explain before touching files, then implement, then verify against a concrete checklist including memory/performance. Use when asked to "implement this feature", "add this screen/flow", or when given a feature request with context/requirements/constraints.
+---
+
+# iOS Feature Implementation
+
+A disciplined inspect → explain → implement → verify loop for feature work
+in an existing codebase. Do not skip straight to editing files.
+
+## 0. Expected request shape
+
+A well-formed feature request names, at minimum:
+
+- **What to build** — the feature/behavior in plain language.
+- **Existing context** — the specific screen(s), ViewModel(s), API(s),
+  and model(s) already involved, by name.
+- **Requirements** — the specific behaviors the finished feature must have.
+- **Constraints** — minimum iOS version, dependency policy, "follow
+  existing architecture", "reuse existing components", "don't touch
+  unrelated files".
+
+If a request is missing this (e.g. "add a favorites feature" with nothing
+else), ask for the specific existing files involved before inspecting —
+guessing which ViewModel or API is "the" relevant one wastes the
+inspection step below.
+
+## 1. Inspect before touching anything
+
+Read, in this order, before writing a single line:
+
+1. **The existing feature/screen this touches.** Read the actual current
+   implementation, not a description of it — a stale comment or README is
+   not the source of truth (if the codebase is undocumented or you can't
+   tell what's current, use `ios-legacy-auditor` first).
+2. **The existing business logic it must integrate with or not break.**
+   Trace what the current ViewModel/service actually does with the data
+   today — validation rules, edge cases already handled, state machines,
+   pricing/eligibility logic, anything with branching. New code that
+   duplicates or silently diverges from existing business rules is a
+   correctness bug even when it compiles and looks clean.
+3. **The API/model layer** it will call into or extend — actual current
+   signatures and types, not remembered ones.
+4. **Nearby reusable components** — check for an existing view, view
+   modifier, or helper before writing a new one; constraints usually say
+   "reuse existing components" for a reason.
+
+Do not modify files during this step.
+
+## 2. Explain before implementing
+
+Present, in this order, before writing implementation code:
+
+1. **Existing architecture** — the pattern actually in use in the touched
+   area (may not match what the rest of the app does — say so if not).
+2. **Files that need modification** — exact paths, and for each, what
+   changes and why.
+3. **Proposed implementation** — concrete enough to review: new
+   types/methods with real signatures, not just prose.
+4. **Potential risks** — what could break, what's ambiguous in the
+   requirements, anything the constraints make harder (e.g. "no new
+   dependencies" ruling out the obvious library for this).
+
+If the codebase's current architecture is unclear or looks like it may
+not match assumptions, use `ios-architect` for the structural judgment
+call before proposing an approach.
+
+## 3. Implement
+
+- Match the existing architecture and style in the touched files —
+  this is not the place to introduce a different pattern, even a better
+  one, unless the request explicitly asks for a refactor.
+- Respect every stated constraint literally: if minimum iOS is 14, don't
+  use an iOS 15+ API without an availability check; if "no new
+  dependencies", don't add one even for a one-line convenience.
+- Touch only the files identified in step 2. If implementation reveals
+  that another file must change too, say so explicitly rather than
+  silently expanding scope.
+- Follow `ios-testing-strategy` for any new tests this feature needs.
+
+## 4. Verify
+
+Run and report on each of the following — don't skip one because it
+seems obviously fine:
+
+1. **Build** — the project actually compiles.
+2. **Tests** — run the relevant test target(s), report pass/fail counts.
+3. **API availability** — every API used is available at the stated
+   minimum iOS version, or is properly `#available`-guarded.
+4. **Retain cycles** — see the Memory & Performance Review below.
+5. **Concurrency** — new `async`/actor-isolated code doesn't introduce a
+   data race or an accidental main-thread block; existing concurrency
+   model in the touched files is preserved, not mixed with a new one.
+6. **Memory implications** — see the Memory & Performance Review below.
+7. **Performance implications** — no new unbounded main-thread work
+   (image decode, JSON parsing, file I/O) introduced on a hot path.
+8. **Review the diff** — read your own changes once, end to end, before
+   reporting done; look for anything outside the files named in step 2.
+
+## Memory & Performance Review
+
+For any feature involving images, networking, WebViews, large
+collections, caching, Core Data, PDF, or media, check all of the
+following. Do not claim memory safety without measurement — if memory
+behavior genuinely matters for this feature, recommend an Instruments
+Allocations/Leaks/Time Profiler investigation rather than asserting it's
+fine from reading the code alone (see `ios-memory-performance-engineer`
+for how to describe that investigation).
+
+1. **Retain cycles**
+   - Closures capturing `self` strongly where the closure outlives the call
+   - Delegates declared `strong` instead of `weak`
+   - `NotificationCenter` observers never removed
+   - Combine/RxSwift subscriptions not cancelled on deinit
+   - `Timer`s retaining their target
+   - `Task`s captured or stored in a way that outlives their owner
+
+2. **Large allocations**
+   - `UIImage`/`Data` held at full resolution when only a thumbnail is shown
+   - JSON decoding of a large payload on the main thread
+   - PDF rendering/generation
+   - WebView content
+   - Image caching without a size bound
+
+3. **Object lifetime**
+   - Does the ViewController/View, ViewModel, Coordinator, `Task`, and
+     any subscriptions all deinit when expected? Trace what holds a
+     reference to what.
+
+4. **Main-thread memory work**
+   - Image decoding, JSON processing, file operations, or PDF generation
+     running synchronously on the main thread
+
+5. **Caching**
+   - Is there a cache size limit? An eviction policy?
+   - Is this introducing a second cache that duplicates an existing one?
+   - `NSCache` (evicts under memory pressure) vs. a plain `Dictionary`
+     (never evicts) — using a Dictionary as an unbounded cache is a leak
+     in slow motion
+
+6. **SwiftUI-specific**
+   - `@State`/`@Observable` holding more than the view actually needs
+   - Objects recreated every `body` evaluation instead of held stable
+   - Expensive work inside `body` itself
+   - Closures passed into child views that capture and retain more than
+     necessary
+
+7. **UIKit-specific**
+   - Cell reuse actually resets per-cell state (images, subscriptions)
+   - Image lifecycle across cell reuse (cancel in-flight loads on reuse)
+   - Layout objects (`NSLayoutConstraint` arrays, etc.) not endlessly
+     re-created
+   - Notification observers registered per-cell/per-view without removal
+
+## 5. Report
+
+Structure the final report as:
+
+- **Files changed** — exact paths.
+- **What changed** — per file, in concrete terms.
+- **Tests performed** — commands run and results, not assumed outcomes.
+- **Performance considerations** — what was checked from the list above
+  and what was found.
+- **Memory considerations** — same, from the Memory & Performance Review.
+- **Remaining risks** — anything not fully verified (e.g. "leak-free by
+  code inspection; recommend an Instruments Allocations pass before
+  shipping if this screen is high-traffic").

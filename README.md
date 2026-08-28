@@ -25,6 +25,7 @@ based on what you ask, no manual switching required.
 |---|---|---|
 | `ios-testing-strategy` | `ios-unit-test-engineer`, `ios-ui-test-engineer` | Concrete seams → test-double → red/green procedure |
 | `ios-legacy-mapping` | `ios-legacy-auditor` | Concrete inventory → detect-architecture → bridging-risk → summary-doc procedure |
+| `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code + business logic → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance) → report |
 
 ### Template
 
@@ -66,7 +67,11 @@ A typical flow, though you never need to invoke any of this by name:
    — it maps the real architecture and produces a summary you can drop
    into `CLAUDE.md`, before anything else touches the code.
 2. **New feature/module?** `ios-architect` proposes structure and flags
-   whether the design is unit-testable.
+   whether the design is unit-testable; `ios-feature-implementation`
+   then drives the actual build — inspecting existing business logic
+   first, explaining the plan before touching files, implementing
+   against the agreed structure, and verifying (build, tests, memory,
+   performance) before reporting done.
 3. **Need tests?** `ios-unit-test-engineer` for logic, `ios-ui-test-engineer`
    for user flows — both follow the same seams → red/green discipline
    from `ios-testing-strategy`.
