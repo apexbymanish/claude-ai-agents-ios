@@ -3,8 +3,8 @@
 A drop-in set of [Claude Code](https://claude.com/claude-code) subagents
 and Skills that turn Claude Code into a specialized iOS development
 team: architecture, unit testing, UI testing, memory/performance,
-UI/UX review, and legacy-codebase auditing — each one auto-invoked
-based on what you ask, no manual switching required.
+UI/UX review, security, and legacy-codebase auditing — each one
+auto-invoked based on what you ask, no manual switching required.
 
 ## What's included
 
@@ -18,6 +18,7 @@ based on what you ask, no manual switching required.
 | `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | Read, Grep, Glob, Bash, Edit, Skill |
 | `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob, Skill (read-only) |
 | `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill (read-only) |
+| `ios-security-reviewer` | ask for a security review, "is this secure", vulnerability check, or auth/session audit | Read, Grep, Glob, Bash, Skill (read-only) |
 
 ### Skills (`.claude/skills/`)
 
@@ -25,6 +26,7 @@ based on what you ask, no manual switching required.
 |---|---|---|
 | `ios-testing-strategy` | `ios-unit-test-engineer`, `ios-ui-test-engineer` | Concrete seams → test-double → red/green procedure |
 | `ios-legacy-mapping` | `ios-legacy-auditor` | Concrete inventory → detect-architecture → bridging-risk → security-signal → summary-doc procedure |
+| `ios-security-review` | `ios-security-reviewer` | 8-area audit: storage/privacy → transport → authN/session → input validation → deep links → third-party SDKs → code hygiene → entitlements |
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
 | `ios-evidence-reporting` | All 6 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed) so no agent claims something works, passes, or is safe without evidence already shown in its report |
 
@@ -82,6 +84,12 @@ A typical flow, though you never need to invoke any of this by name:
 5. **Something feels slow or leaks memory?** `ios-memory-performance-engineer`
    reads the code for static causes first, and gives you the exact
    Instruments procedure when it can't be found by reading alone.
+6. **Want a security check?** `ios-security-reviewer` runs a dedicated
+   8-area audit (storage, transport, auth, input validation, deep
+   links, dependencies, code hygiene, entitlements); `ios-architect`,
+   `ios-legacy-auditor`, and `ios-feature-implementation` also flag
+   lighter, scoped security concerns as part of their own work and
+   point here for anything that warrants a full audit.
 
 ## Evidence over assertion
 

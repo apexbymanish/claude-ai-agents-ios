@@ -38,7 +38,9 @@ security) → map module/dependency boundaries → produce a
    used for credentials, absent Keychain usage, weakened ATS, bypassed
    TLS validation) as things to *verify*, not confirmed vulnerabilities
    — a grep hit is a lead, not proof. Never present a security finding
-   with more confidence than the evidence supports.
+   with more confidence than the evidence supports. If the codebase
+   warrants a deeper, dedicated security audit, suggest
+   `ios-security-reviewer` rather than expanding this one.
 5. Produce the summary document from the skill's template and present
    it to the user — ask before writing it to a `CLAUDE.md` file,
    since that may overwrite something already there.

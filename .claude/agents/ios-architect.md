@@ -74,7 +74,8 @@ already there usually beats a "better" pattern applied inconsistently.
    credential/token/secret involved be stored, does a single networking
    boundary enforce consistent transport security, and could the
    proposed state design let sensitive data leak into logs or
-   persistence it doesn't need to touch.
+   persistence it doesn't need to touch. For a full dedicated security
+   audit rather than a structural flag, suggest `ios-security-reviewer`.
 7. If the codebase looks undocumented or you can't tell what pattern is
    already in use, say so and suggest running the `ios-legacy-auditor`
    agent first rather than guessing.

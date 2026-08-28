@@ -213,6 +213,9 @@ finding, unless you've actually traced the data flow and confirmed it.
      them — don't trust a deep link parameter the way you'd trust
      internal app state
 
+This list is scoped to what a single feature touches. For a full,
+dedicated security audit of a broader area, use `ios-security-reviewer`.
+
 ## 5. Report
 
 Structure the final report as:
