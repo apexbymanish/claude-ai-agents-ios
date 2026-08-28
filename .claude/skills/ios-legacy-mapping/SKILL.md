@@ -26,14 +26,14 @@ all). Grep for signal, don't guess:
 
 ```bash
 # Massive View Controller smell
-grep -rl "class.*ViewController" --include="*.swift" --include="*.m" . \
-  | xargs wc -l | sort -rn | head -20
+grep -rlZ "class.*ViewController" --include="*.swift" --include="*.m" . \
+  | xargs -0 wc -l | sort -rn | head -20
 
 # Singleton usage density
 grep -rn "\.shared\b" --include="*.swift" . | wc -l
 
 # Delegate pattern density (common in older UIKit code)
-grep -rln "Delegate" --include="*.swift" --include="*.h" . | wc -l
+grep -rn "Delegate" --include="*.swift" --include="*.h" . | wc -l
 
 # MVVM signal
 grep -rl "ViewModel" --include="*.swift" . | wc -l
@@ -78,7 +78,7 @@ Write findings as a `CLAUDE.md`-ready summary with these sections:
 - **Targets:** [list from step 1]
 - **Architecture actually in use:** [finding from step 2, with evidence:
   "42 view controllers over 500 lines, 180 `.shared` references,
-  6 ViewModel types" — not just a label]
+  6 files referencing ViewModel" — not just a label]
 - **Legacy Objective-C surface:** [bridging headers found, approximate
   `.m`/`.h` file count, riskiest bridging points]
 - **Module structure:** [monolith / SPM packages / CocoaPods, and which]
@@ -88,4 +88,3 @@ Write findings as a `CLAUDE.md`-ready summary with these sections:
 
 Hand this to the user as the seed for their project's own `CLAUDE.md` —
 don't silently create or overwrite one without being asked.
-```

@@ -13,11 +13,11 @@ based on what you ask, no manual switching required.
 | Agent | Invoked when you... | Tools |
 |---|---|---|
 | `ios-architect` | start a new feature/module, ask "how should I structure this", plan a refactor, choose MVVM/Clean/VIPER, decide on DI or SwiftData vs. Core Data | Read, Grep, Glob, Write, Edit |
-| `ios-unit-test-engineer` | ask for tests, test coverage, TDD, or to make code testable | Read, Grep, Glob, Write, Edit, Bash |
-| `ios-ui-test-engineer` | ask for UI tests, debug a flaky UI test, or set up snapshot testing | Read, Grep, Glob, Write, Edit, Bash |
+| `ios-unit-test-engineer` | ask for tests, test coverage, TDD, or to make code testable | Read, Grep, Glob, Write, Edit, Bash, Skill |
+| `ios-ui-test-engineer` | ask for UI tests, debug a flaky UI test, or set up snapshot testing | Read, Grep, Glob, Write, Edit, Bash, Skill |
 | `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | Read, Grep, Glob, Bash, Edit |
 | `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob (read-only) |
-| `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash (read-only) |
+| `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill (read-only) |
 
 ### Skills (`.claude/skills/`)
 
@@ -38,9 +38,16 @@ Copy what you need into your iOS project's repo root:
 
 ```bash
 # From this repo, copy into your project:
+mkdir -p /path/to/your-ios-project/.claude
 cp -r .claude/agents /path/to/your-ios-project/.claude/
 cp -r .claude/skills /path/to/your-ios-project/.claude/
 cp CLAUDE.md.template /path/to/your-ios-project/CLAUDE.md   # then edit it
+```
+
+```bash
+# Or symlink instead of copying, to stay in sync across multiple projects:
+ln -s /path/to/claude-ai-agents-ios/.claude/agents /path/to/your-ios-project/.claude/agents
+ln -s /path/to/claude-ai-agents-ios/.claude/skills /path/to/your-ios-project/.claude/skills
 ```
 
 For personal (cross-project) use instead of per-project, copy into

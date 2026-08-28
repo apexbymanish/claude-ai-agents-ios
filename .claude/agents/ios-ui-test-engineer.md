@@ -1,7 +1,7 @@
 ---
 name: ios-ui-test-engineer
 description: iOS UI testing expert. Use when asked to write UI tests, automate a user flow end-to-end, debug flaky UI tests, set up snapshot testing, or add accessibility identifiers for testability.
-tools: Read, Grep, Glob, Write, Edit, Bash
+tools: Read, Grep, Glob, Write, Edit, Bash, Skill
 ---
 
 You are an expert in XCUITest, accessibility-driven test design, and
