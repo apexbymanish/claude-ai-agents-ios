@@ -3,9 +3,9 @@
 A drop-in set of [Claude Code](https://claude.com/claude-code) subagents
 and Skills that turn Claude Code into a specialized iOS development
 team: architecture, unit testing, UI testing, memory/performance,
-UI/UX review, security, App Store readiness, and legacy-codebase
-auditing — each one auto-invoked based on what you ask, no manual
-switching required.
+UI/UX review, security, App Store readiness, legacy-codebase auditing,
+and independent evidence review — each one auto-invoked based on what
+you ask, no manual switching required.
 
 ## What's included
 
@@ -21,11 +21,17 @@ switching required.
 | `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
 | `ios-security-reviewer` | ask for a security review, "is this secure", vulnerability check, or auth/session audit | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
 | `ios-app-store-reviewer` | ask "is this ready to submit", "will this get rejected", or to check App Store compliance | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
+| `ios-evidence-reviewer` | after another agent produces a report, or ask to "double-check this report"/"verify these claims" | Read, Grep, Glob, Skill (read-only) |
 
 \* `ios-agent` and `ios-simulator` are optional third-party MCP servers — see
 [Optional tooling](#optional-tooling-static-analysis--simulator-control) below.
-Every agent works standalone without them; when configured, their findings
-strengthen a report from `(static)` to `(executed)` grade.
+Every agent works standalone without them. `ios-agent` strengthens a
+`STATIC_ANALYSIS`-tier read with structured tooling — it never raises a
+claim to `BUILD_VERIFIED`/`TEST_VERIFIED`/`RUNTIME_VERIFIED`, since it
+never builds or runs the app itself. `ios-simulator` actually does
+build/install/launch the app, so its output can genuinely earn
+`BUILD_VERIFIED`, `TEST_VERIFIED`, or `RUNTIME_VERIFIED` — see the
+seven-tier taxonomy under [Evidence over assertion](#evidence-over-assertion).
 
 ### Skills (`.claude/skills/`)
 
@@ -37,7 +43,7 @@ strengthen a report from `(static)` to `(executed)` grade.
 | `ios-app-store-readiness` | `ios-app-store-reviewer` | Pre-submission audit: privacy manifest → export compliance → permission descriptions → App Tracking Transparency → Sign in with Apple parity → unused entitlements → rejection triggers |
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
 | `ios-performance-measurement` | `ios-memory-performance-engineer` | Reproduce → choose what to measure → measure before changing anything → change → re-measure with the same conditions → verify instrumentation removed |
-| `ios-evidence-reporting` | All 8 agents — fires whenever any of them concludes a task | Standard status-block format (`✓` verified / `⚠` unverified / `✗` failed, each `✓` graded `(static)` or `(executed)`) so no agent claims something works, passes, or is safe without evidence already shown in its report |
+| `ios-evidence-reporting` | All 9 agents — fires whenever any of them concludes a task | Seven-tier evidence taxonomy (`ASSUMPTION` → `HUMAN_VERIFICATION`), the claim → minimum-evidence matrix, and the forbidden-claims list, so no agent claims something works, is fixed, or is faster/secure/thread-safe without evidence at the matching tier |
 
 ### Knowledge library (`knowledge/`)
 
@@ -93,8 +99,7 @@ Nothing else is required — Claude Code reads each agent's `description`
 frontmatter and invokes the right one automatically based on your
 request. See [Optional tooling](#optional-tooling-static-analysis--simulator-control)
 below for two third-party MCP servers that strengthen several agents'
-findings from `(static)` to `(executed)` grade, without which everything
-above still works on its own.
+evidence tier, without which everything above still works on its own.
 
 ## Optional tooling: static analysis & simulator control
 
@@ -102,7 +107,7 @@ Two servers from [`ios-agent-skill`](https://github.com/Nagarjuna2997/ios-agent-
 (MIT-licensed, not affiliated with this repo) give several agents above
 a way to *run* a check instead of only reading code for it. Neither is
 required — every agent already works without them, falling back to
-`(static)` reads and manually-described procedures.
+`STATIC_ANALYSIS`-tier reads and manually-described procedures.
 
 ### `ios-agent-mcp` — static analysis (published, recommended)
 
@@ -170,6 +175,7 @@ graph TD
     CC --> LEGACY[ios-legacy-auditor]
     CC --> SEC[ios-security-reviewer]
     CC --> STORE[ios-app-store-reviewer]
+    CC --> REVIEWER[ios-evidence-reviewer]
 
     ARCH --> KARCH[["knowledge/architecture-patterns.md"]]
     ARCH -. new feature .-> FEAT(["ios-feature-implementation (skill)"])
@@ -195,14 +201,20 @@ graph TD
     FEAT --> EVID
     MEASURE --> EVID
 
-    EVID(["ios-evidence-reporting (skill)<br/>every report closes with this status block"])
+    EVID(["ios-evidence-reporting (skill)<br/>every report is tiered against this taxonomy"])
+    EVID -. claim-bearing report .-> REVIEWER
+    REVIEWER --> EVID
 ```
 
 There's no router or orchestrator to configure — Claude Code's own
 description-matching *is* the dispatch layer. Each agent is a leaf that
-either reads a `knowledge/*.md` file for deep reference material, follows
-a `Skill` for a shared procedure, or both, and every path converges on
-the same evidence-reporting standard at the end.
+either reads a `knowledge/*.md` file for deep reference material,
+follows a `Skill` for a shared procedure, or both, and every path
+converges on the same evidence-reporting standard at the end.
+`ios-evidence-reviewer` is the one exception to "leaf": it reads
+*another* agent's finished report and downgrades any claim the shown
+evidence doesn't actually support, then the corrected report closes
+with the same status block format again.
 
 ## How they hand off to each other
 
@@ -238,24 +250,41 @@ A typical flow, though you never need to invoke any of this by name:
    separate concern from `ios-security-reviewer` even though they share
    some ground (entitlements, transport security), so run both before a
    release if either is relevant.
+8. **Report making a build/test/runtime/memory/performance/security
+   claim?** `ios-evidence-reviewer` checks it before it's called done —
+   `ios-feature-implementation` calls it automatically as its last
+   step; any other agent's report can be handed to it directly too.
 
 ## Evidence over assertion
 
-Every agent in this repo ends its report with the `ios-evidence-reporting`
-skill's status block instead of a bare "Done! It works." A build-and-test
-task shows `BUILD`/`TEST`/`DIFF` lines backed by real command output; a
-read-only review shows `ACCESSIBILITY`/`ARCHITECTURE`/`SECURITY` lines
-backed by file:line citations and counts. Anything not actually checked
-is marked `⚠` and explained — never silently dropped, never asserted
-as if it were verified. Every `✓` also carries a grade — `(static)` for
-"confirmed by reading the code" or `(executed)` for "confirmed by
-actually running something" — since those are different strengths of
-evidence and collapsing them loses the difference. `ios-memory-
-performance-engineer` uses `ios-performance-measurement` to earn an
-`(executed)` grade on a performance claim: lock the reproduction steps,
-measure before changing anything, change, then measure again with the
-same conditions, rather than asserting "this should be faster" from
-reading the code alone.
+AI confidence is not evidence. AI reasoning is not runtime evidence. A
+code change is not automatically a verified fix. Every agent in this
+repo ends its report with the `ios-evidence-reporting` skill's status
+block instead of a bare "Done! It works," and every line in that block
+is tiered against one of seven evidence levels, weakest to strongest:
+
+`ASSUMPTION` → `STATIC_ANALYSIS` → `BUILD_VERIFIED` → `TEST_VERIFIED`
+→ `RUNTIME_VERIFIED` → `RUNTIME_MEASURED` → `HUMAN_VERIFICATION`
+
+A claim never gets reported at a higher tier than the evidence actually
+reached. Reading source (including an MCP static analyzer's structured
+output) is `STATIC_ANALYSIS`, full stop, whether a human or a tool did
+the reading — it does not become stronger evidence just because a tool
+produced it, and it can never support "no leak exists" or "memory
+improved." Those specifically require `RUNTIME_MEASURED`: an actual
+number from actually running the app (Instruments, MetricKit,
+`os_signpost`), via `ios-performance-measurement`'s reproduce → baseline
+→ measure → change → build → test → measure again → compare → report
+loop. A claim this repo's agents will never make without matching
+evidence: "fixed," "optimized," "faster," "leak-free," "thread-safe,"
+or "secure" — see `ios-evidence-reporting`'s claim → minimum-evidence
+matrix for the full list and the precise-language alternatives.
+
+Because the agent that implements something shouldn't be the only
+authority on whether its own report is honest, `ios-evidence-reviewer`
+independently re-checks a finished report's claims against that same
+matrix and downgrades anything unsupported before it's presented as
+final — see "How it fits together" above.
 
 ## Design philosophy
 
@@ -272,9 +301,11 @@ for how each is applied to iOS specifically.
 file gets held to during development: frontmatter `name:` matches the
 filename or directory, `description:` carries a real quoted trigger
 phrase, a read-only claim in the body doesn't sit next to a `Write`/
-`Edit` grant, code fences close, and every backtick `ios-*` reference
-across the repo resolves to a real agent or skill. It's non-blocking —
-findings are for a human to act on, not a gate.
+`Edit` grant, code fences close, every backtick `ios-*` reference
+across the repo resolves to a real agent or skill, and no file still
+carries the old `(static)`/`(executed)` grading instead of the current
+seven-tier taxonomy. It's non-blocking — findings are for a human to
+act on, not a gate.
 
 ```bash
 ./scripts/audit-agents.sh
