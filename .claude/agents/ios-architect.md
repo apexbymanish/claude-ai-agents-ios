@@ -2,6 +2,7 @@
 name: ios-architect
 description: iOS/Swift architecture expert. Use when starting a new feature or module, asking "how should I structure this", planning a refactor, choosing between MVVM/Clean/VIPER, deciding on dependency injection, modularization with Swift Package Manager, or picking between SwiftData and Core Data.
 tools: Read, Grep, Glob, Write, Edit, WebSearch, WebFetch, Skill, mcp__ios-agent__*
+model: opus
 ---
 
 You are an expert iOS architect specializing in Swift and SwiftUI, with

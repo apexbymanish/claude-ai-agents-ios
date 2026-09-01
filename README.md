@@ -5,25 +5,33 @@
 A drop-in set of [Claude Code](https://claude.com/claude-code) subagents
 and Skills that turn Claude Code into a specialized iOS development
 team: architecture, unit testing, UI testing, memory/performance,
-UI/UX review, security, App Store readiness, legacy-codebase auditing,
-and independent evidence review — each one auto-invoked based on what
-you ask, no manual switching required.
+UI/UX review, security, App Store readiness, Tuist project generation,
+legacy-codebase auditing, and independent evidence review — each one
+auto-invoked based on what you ask, no manual switching required.
 
 ## What's included
 
 ### Subagents (`.claude/agents/`)
 
-| Agent | Invoked when you... | Tools |
-|---|---|---|
-| `ios-architect` | start a new feature/module, ask "how should I structure this", plan a refactor, choose MVVM/Clean/VIPER, decide on DI or SwiftData vs. Core Data | Read, Grep, Glob, Write, Edit, Skill, `ios-agent`* |
-| `ios-unit-test-engineer` | ask for tests, test coverage, TDD, or to make code testable | Read, Grep, Glob, Write, Edit, Bash, Skill, `ios-agent`* |
-| `ios-ui-test-engineer` | ask for UI tests, debug a flaky UI test, or set up snapshot testing | Read, Grep, Glob, Write, Edit, Bash, Skill, `ios-agent`*, `ios-simulator`* |
-| `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | Read, Grep, Glob, Bash, Edit, Skill, `ios-agent`*, `ios-simulator`* |
-| `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | Read, Grep, Glob, Skill, `ios-agent`* (read-only) |
-| `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
-| `ios-security-reviewer` | ask for a security review, "is this secure", vulnerability check, or auth/session audit | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
-| `ios-app-store-reviewer` | ask "is this ready to submit", "will this get rejected", or to check App Store compliance | Read, Grep, Glob, Bash, Skill, `ios-agent`* (read-only) |
-| `ios-evidence-reviewer` | after another agent produces a report, or ask to "double-check this report"/"verify these claims" | Read, Grep, Glob, Skill (read-only) |
+| Agent | Invoked when you... | Model | Tools |
+|---|---|---|---|
+| `ios-architect` | start a new feature/module, ask "how should I structure this", plan a refactor, choose MVVM/Clean/VIPER, decide on DI or SwiftData vs. Core Data | opus | Read, Grep, Glob, Write, Edit, WebSearch, WebFetch, Skill, `ios-agent`* |
+| `ios-unit-test-engineer` | ask for tests, test coverage, TDD, or to make code testable | sonnet | Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch, Skill, `ios-agent`* |
+| `ios-ui-test-engineer` | ask for UI tests, debug a flaky UI test, or set up snapshot testing | sonnet | Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch, Skill, `ios-agent`*, `ios-simulator`* |
+| `ios-memory-performance-engineer` | report a leak, growing memory, slow scrolling, or slow launch | opus | Read, Grep, Glob, Bash, Edit, WebSearch, WebFetch, Skill, `ios-agent`*, `ios-simulator`* |
+| `ios-ux-reviewer` | ask for a UI/UX review or design-consistency check | sonnet | Read, Grep, Glob, WebSearch, WebFetch, Skill, `ios-agent`* (read-only) |
+| `ios-legacy-auditor` | onboard onto an unfamiliar, undocumented, or large legacy codebase | opus | Read, Grep, Glob, Bash, WebSearch, WebFetch, Skill, `ios-agent`* (read-only) |
+| `ios-security-reviewer` | ask for a security review, "is this secure", vulnerability check, or auth/session audit | opus | Read, Grep, Glob, Bash, WebSearch, WebFetch, Skill, `ios-agent`* (read-only) |
+| `ios-app-store-reviewer` | ask "is this ready to submit", "will this get rejected", or to check App Store compliance | sonnet | Read, Grep, Glob, Bash, WebSearch, WebFetch, Skill, `ios-agent`* (read-only) |
+| `ios-tuist-engineer` | set up/debug/migrate to Tuist, edit `Project.swift`/`Workspace.swift`, or fix SPM resolution/"duplicate tasks" errors after `tuist generate` | sonnet | Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch, Skill, `ios-agent`* |
+| `ios-evidence-reviewer` | after another agent produces a report, or ask to "double-check this report"/"verify these claims" | haiku | Read, Grep, Glob, WebSearch, WebFetch, Skill (read-only) |
+
+Model assignments follow task weight, not agent seniority: `opus` for
+agents doing open-ended architectural/security/undocumented-codebase
+reasoning, `sonnet` for procedure-driven implementation and checklist
+review, `haiku` for `ios-evidence-reviewer`'s narrower, mechanical
+claim-vs-evidence check. Override any of these in your own copy if your
+usage patterns differ — nothing else depends on the specific value.
 
 \* `ios-agent` and `ios-simulator` are optional third-party MCP servers — see
 [Optional tooling](#optional-tooling-static-analysis--simulator-control) below.
@@ -45,7 +53,7 @@ seven-tier taxonomy under [Evidence over assertion](#evidence-over-assertion).
 | `ios-app-store-readiness` | `ios-app-store-reviewer` | Pre-submission audit: privacy manifest → export compliance → permission descriptions → App Tracking Transparency → Sign in with Apple parity → unused entitlements → rejection triggers |
 | `ios-feature-implementation` | General — fires on any feature request, works alongside `ios-architect` | Inspect existing code, business logic, API/connectivity behavior, and security posture → explain before touching files → implement → verify (build, tests, retain cycles, memory, performance, security) → report |
 | `ios-performance-measurement` | `ios-memory-performance-engineer` | Reproduce → choose what to measure → measure before changing anything → change → re-measure with the same conditions → verify instrumentation removed |
-| `ios-evidence-reporting` | All 9 agents — fires whenever any of them concludes a task | Seven-tier evidence taxonomy (`ASSUMPTION` → `HUMAN_VERIFICATION`), the claim → minimum-evidence matrix, and the forbidden-claims list, so no agent claims something works, is fixed, or is faster/secure/thread-safe without evidence at the matching tier |
+| `ios-evidence-reporting` | All 10 agents — fires whenever any of them concludes a task | Seven-tier evidence taxonomy (`ASSUMPTION` → `HUMAN_VERIFICATION`), the claim → minimum-evidence matrix, and the forbidden-claims list, so no agent claims something works, is fixed, or is faster/secure/thread-safe without evidence at the matching tier |
 | `swift-concurrency` | `ios-architect`, `ios-unit-test-engineer`, `ios-ui-test-engineer`, `ios-memory-performance-engineer`, `ios-legacy-auditor` — loaded only when the question involves it | async/await, actors, `Sendable`, structured/unstructured `Task`, cancellation, actor reentrancy — with the specific `STATIC_ANALYSIS` vs. concurrency-test-or-strict-mode bar a "thread-safe" claim actually needs |
 | `swiftui-engineering` | `ios-architect`, `ios-ui-test-engineer`, `ios-memory-performance-engineer`, `ios-ux-reviewer`, `ios-legacy-auditor` — loaded only when the question involves it | State-ownership (`@StateObject` vs. `@ObservedObject`), view identity, body-recomputation cost, `@EnvironmentObject` injection — split into "pattern looks correct" (`STATIC_ANALYSIS`) vs. "runtime behavior confirmed" (`RUNTIME_VERIFIED`) |
 | `ios-api-availability` | `ios-architect`, `ios-unit-test-engineer`, `ios-ui-test-engineer`, `ios-legacy-auditor` — loaded only when the question involves it | A mandatory 4-fact comparison per API (deployment target, API-introduction version, required guard, actual project compatibility) — flags the over-restrictive-guard failure mode, not just a missing guard |
@@ -72,6 +80,23 @@ extra configuration needed.
   architecture section for you on an unfamiliar codebase).
 
 ## Install
+
+### Option A — plugin marketplace (recommended)
+
+```
+/plugin marketplace add apexbymanish/claude-ai-agents-ios
+/plugin install ios-agents@claude-ai-agents-ios
+```
+
+This installs all 10 agents and 12 skills in one step. The `knowledge/`
+folder is still project-relative (see the note under Option B) — copy or
+symlink it into your project root either way, plugin install or not:
+
+```bash
+cp -r knowledge /path/to/your-ios-project/knowledge
+```
+
+### Option B — copy or symlink manually
 
 Copy what you need into your iOS project's repo root:
 
@@ -181,6 +206,7 @@ graph TD
     CC --> LEGACY[ios-legacy-auditor]
     CC --> SEC[ios-security-reviewer]
     CC --> STORE[ios-app-store-reviewer]
+    CC --> TUIST[ios-tuist-engineer]
     CC --> REVIEWER[ios-evidence-reviewer]
 
     ARCH --> KARCH[["knowledge/architecture-patterns.md"]]
@@ -196,6 +222,8 @@ graph TD
     SEC --> SECSKILL(["ios-security-review (skill)"])
     STORE --> STORESKILL(["ios-app-store-readiness (skill)"])
 
+    ARCH -. structure to generate .-> TUIST
+
     ARCH --> EVID
     UNIT --> EVID
     UITEST --> EVID
@@ -204,6 +232,7 @@ graph TD
     LEGACY --> EVID
     SEC --> EVID
     STORE --> EVID
+    TUIST --> EVID
     FEAT --> EVID
     MEASURE --> EVID
 
@@ -212,6 +241,7 @@ graph TD
     UNIT --> REVIEWER
     UITEST --> REVIEWER
     MEM --> REVIEWER
+    TUIST --> REVIEWER
     FEAT --> REVIEWER
     REVIEWER --> EVID
 
@@ -239,11 +269,11 @@ converges on the same evidence-reporting standard at the end.
 *another* agent's finished report and downgrades any claim the shown
 evidence doesn't actually support, then the corrected report closes
 with the same status block format again. `ios-feature-implementation`,
-`ios-memory-performance-engineer`, `ios-unit-test-engineer`, and
-`ios-ui-test-engineer` route through it automatically whenever their
-own report reaches `BUILD_VERIFIED` or higher — the agent that ran the
-build/test/measurement isn't the only one who checks whether its
-report is honest about it.
+`ios-memory-performance-engineer`, `ios-unit-test-engineer`,
+`ios-ui-test-engineer`, and `ios-tuist-engineer` route through it
+automatically whenever their own report reaches `BUILD_VERIFIED` or
+higher — the agent that ran the build/test/measurement isn't the only
+one who checks whether its report is honest about it.
 
 The four cross-cutting skills in the dashed cluster are different from
 the rest: they aren't tied to one agent's fixed procedure, they're a
@@ -288,13 +318,18 @@ A typical flow, though you never need to invoke any of this by name:
    separate concern from `ios-security-reviewer` even though they share
    some ground (entitlements, transport security), so run both before a
    release if either is relevant.
-8. **Report reaching `BUILD_VERIFIED` or higher?** `ios-evidence-reviewer`
+8. **`tuist generate`/SPM resolution broken, or migrating onto Tuist?**
+   `ios-tuist-engineer` diagnoses `Project.swift`/`Workspace.swift` and
+   dependency-resolution failures directly — `ios-architect` decides
+   *what* module structure a feature needs, this agent is the one that
+   makes Tuist actually generate and resolve it.
+9. **Report reaching `BUILD_VERIFIED` or higher?** `ios-evidence-reviewer`
    checks it before it's called done. `ios-feature-implementation`,
-   `ios-memory-performance-engineer`, `ios-unit-test-engineer`, and
-   `ios-ui-test-engineer` — the agents that can independently produce a
-   build/test/runtime/measured claim, not just a static finding — each
-   route through it automatically as their last step; any other agent's
-   report can be handed to it directly too.
+   `ios-memory-performance-engineer`, `ios-unit-test-engineer`,
+   `ios-ui-test-engineer`, and `ios-tuist-engineer` — the agents that can
+   independently produce a build/test/runtime/measured claim, not just a
+   static finding — each route through it automatically as their last
+   step; any other agent's report can be handed to it directly too.
 
 ## Evidence over assertion
 

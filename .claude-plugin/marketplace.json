@@ -1,0 +1,14 @@
+{
+  "name": "claude-ai-agents-ios",
+  "owner": {
+    "name": "apexbymanish",
+    "url": "https://github.com/apexbymanish"
+  },
+  "plugins": [
+    {
+      "name": "ios-agents",
+      "source": "./",
+      "description": "Claude Code subagents & skills for iOS/Swift — evidence-based AI agents for architecture, testing, memory, security & App Store review"
+    }
+  ]
+}

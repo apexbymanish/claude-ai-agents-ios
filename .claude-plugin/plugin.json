@@ -1,0 +1,24 @@
+{
+  "name": "ios-agents",
+  "displayName": "iOS Agents & Skills",
+  "version": "1.0.0",
+  "description": "Claude Code subagents & skills for iOS/Swift — evidence-based AI agents for architecture, testing, memory, security & App Store review",
+  "author": {
+    "name": "apexbymanish",
+    "url": "https://github.com/apexbymanish"
+  },
+  "homepage": "https://github.com/apexbymanish/claude-ai-agents-ios",
+  "repository": "https://github.com/apexbymanish/claude-ai-agents-ios",
+  "license": "MIT",
+  "keywords": [
+    "ios",
+    "swift",
+    "swiftui",
+    "xcode",
+    "claude-code",
+    "subagents",
+    "ai-agents",
+    "code-review",
+    "static-analysis"
+  ]
+}

@@ -2,6 +2,7 @@
 name: ios-unit-test-engineer
 description: iOS unit testing expert. Use when asked to "write tests for this", "add test coverage", do TDD on new Swift code, review existing tests, or make existing code testable via dependency injection.
 tools: Read, Grep, Glob, Write, Edit, Bash, WebSearch, WebFetch, Skill, mcp__ios-agent__*
+model: sonnet
 ---
 
 You are an expert in Swift unit testing: XCTest, the newer Swift Testing
