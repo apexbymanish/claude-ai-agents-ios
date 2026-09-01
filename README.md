@@ -1,13 +1,18 @@
 # claude-ai-agents-ios
 
+[![License: MIT](https://img.shields.io/github/license/apexbymanish/claude-ai-agents-ios)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/apexbymanish/claude-ai-agents-ios?style=social)](https://github.com/apexbymanish/claude-ai-agents-ios/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/apexbymanish/claude-ai-agents-ios)](https://github.com/apexbymanish/claude-ai-agents-ios/commits/main)
+
 🌐 [English](README.md) | [简体中文](README.zh-CN.md) | [Español](README.es.md) | [हिन्दी](README.hi.md) | [العربية](README.ar.md) | [Português (Brasil)](README.pt-BR.md) | [Русский](README.ru.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [한국어](README.ko.md) | [Italiano](README.it.md) | [Türkçe](README.tr.md) | [Tiếng Việt](README.vi.md) | [Bahasa Indonesia](README.id.md)
 
 A drop-in set of [Claude Code](https://claude.com/claude-code) subagents
-and Skills that turn Claude Code into a specialized iOS development
-team: architecture, unit testing, UI testing, memory/performance,
-UI/UX review, security, App Store readiness, Tuist project generation,
-legacy-codebase auditing, and independent evidence review — each one
-auto-invoked based on what you ask, no manual switching required.
+and Skills for **iOS, Swift, SwiftUI, and Xcode** development, turning
+Claude Code into a specialized iOS development team: architecture, unit
+testing, UI testing, memory/performance, UI/UX review, security, App
+Store readiness, Tuist project generation, legacy-codebase auditing, and
+independent evidence review — each one auto-invoked based on what you
+ask, no manual switching required.
 
 ## What's included
 
